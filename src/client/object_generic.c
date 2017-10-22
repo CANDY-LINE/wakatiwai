@@ -626,7 +626,7 @@ lwm2m_object_t * get_object(uint16_t objectId)
         return NULL;
     }
 
-    // TODO Setup Instances
+    // Setup Instances
     genericObj->instanceList = (lwm2m_list_t *)lwm2m_malloc(sizeof(lwm2m_list_t));
     if (NULL != genericObj->instanceList)
     {

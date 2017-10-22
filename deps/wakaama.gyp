@@ -22,8 +22,7 @@
           '-Wno-unused-value',
       ],
       'defines': [
-        '<@(wakaama_defines)',
-        'LWM2M_CLIENT_MODE',
+        '<@(wakaama_client_defines)',
       ],
     },
     {
@@ -37,7 +36,6 @@
         '<(tinydtls_dir)',
       ],
       'dependencies': [
-        'liblwm2mclient',
       ],
       'cflags': [
       ],
@@ -48,11 +46,11 @@
           '-Wno-unused-value',
       ],
       'defines': [
-        '<@(wakaama_defines)',
+        '<@(wakaama_client_defines)',
       ],
     },
     {
-      'target_name': 'liblwm2mshared',
+      'target_name': 'liblwm2mclientshared',
       'type': 'static_library',
       'include_dirs': [
         '<(wakaama_core_dir)',
@@ -61,19 +59,18 @@
         '<(deps_dir)',
       ],
       'dependencies': [
-        'liblwm2mclient',
         'libtinydtls',
       ],
       'cflags': [
       ],
       'sources': [
-        '<@(wakaama_shared_sources)',
+        '<@(wakaama_client_shared_sources)',
       ],
       'cflags_cc': [
           '-Wno-unused-value',
       ],
       'defines': [
-        '<@(wakaama_defines)',
+        '<@(wakaama_client_defines)',
       ],
     },
     {
@@ -88,7 +85,7 @@
       ],
       'dependencies': [
         'liblwm2mclient',
-        'liblwm2mshared',
+        'liblwm2mclientshared',
         'libtinydtls',
       ],
       'cflags': [
@@ -100,8 +97,7 @@
         '-Wno-unused-value',
       ],
       'defines': [
-        '<@(wakaama_defines)',
-        'LWM2M_CLIENT_MODE',
+        '<@(wakaama_client_defines)',
       ],
     },
     {
@@ -120,7 +116,75 @@
           '-Wno-unused-value',
       ],
       'defines': [
-        '<@(wakaama_defines)',
+      ],
+    },
+    {
+      'target_name': 'liblwm2mserver',
+      'type': 'static_library',
+      'include_dirs': [
+        '<(wakaama_core_dir)/er-coap-13',
+        '<(wakaama_core_dir)',
+      ],
+      'cflags': [
+      ],
+      'sources': [
+        '<@(wakaama_core_sources)',
+        '<(wakaama_core_dir)/json.c',
+      ],
+      'cflags_cc': [
+          '-Wno-unused-value',
+      ],
+      'defines': [
+        '<@(wakaama_sever_defines)',
+      ],
+    },
+    {
+      'target_name': 'liblwm2mservershared',
+      'type': 'static_library',
+      'include_dirs': [
+        '<(wakaama_core_dir)',
+        '<(wakaama_shared_dir)',
+        '<(tinydtls_dir)',
+        '<(deps_dir)',
+      ],
+      'dependencies': [
+        'libtinydtls',
+      ],
+      'cflags': [
+      ],
+      'sources': [
+        '<@(wakaama_server_shared_sources)',
+      ],
+      'cflags_cc': [
+          '-Wno-unused-value',
+      ],
+      'defines': [
+        '<@(wakaama_sever_defines)',
+      ],
+    },
+    {
+      'target_name': 'lwm2mserver',
+      'type': 'executable',
+      'include_dirs': [
+        '<(wakaama_core_dir)',
+        '<(wakaama_shared_dir)',
+        '<(tinydtls_dir)',
+        '<(wakaama_server_dir)',
+      ],
+      'dependencies': [
+        'liblwm2mservershared',
+        'liblwm2mserver',
+      ],
+      'cflags': [
+      ],
+      'sources': [
+        '<(wakaama_server_dir)/lwm2mserver.c',
+      ],
+      'cflags_cc': [
+        '-Wno-unused-value',
+      ],
+      'defines': [
+        '<@(wakaama_sever_defines)',
       ],
     },
   ]

@@ -4,7 +4,7 @@
     'deps_dir': './deps',
     'src_dir': './src',
     'client_dir': '<(src_dir)/client',
-    'executable': 'wakatiwai',
+    'executable': 'wakatiwaiclient',
   },
   'includes': [
     'deps/common.gypi'
@@ -25,7 +25,7 @@
       'dependencies': [
         '<(deps_dir)/wakaama.gyp:libbase64',
         '<(deps_dir)/wakaama.gyp:liblwm2mclient',
-        '<(deps_dir)/wakaama.gyp:liblwm2mshared',
+        '<(deps_dir)/wakaama.gyp:liblwm2mclientshared',
         '<(deps_dir)/wakaama.gyp:libtinydtls',
         '<(deps_dir)/wakaama.gyp:lwm2mclientcoreobj',
       ],
@@ -39,20 +39,21 @@
         '-Wno-unused-value',
       ],
       'defines': [
-        '<@(wakaama_defines)',
-        'LWM2M_CLIENT_MODE',
+        '<@(wakaama_client_defines)',
       ],
     },
     {
       'target_name': 'action_after_build',
       'type': 'none',
       'dependencies': [
+        '<(deps_dir)/wakaama.gyp:lwm2mserver',
         '<(executable)',
       ],
       'copies': [
         {
           'files': [
-            '<(PRODUCT_DIR)/<(executable)'
+            '<(PRODUCT_DIR)/lwm2mserver',
+            '<(PRODUCT_DIR)/<(executable)',
           ],
           'destination': '<(module_path)'
         }

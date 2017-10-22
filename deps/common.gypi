@@ -45,21 +45,35 @@
       '<(wakaama_client_dir)/object_server.c',
     ],
     'wakaama_shared_dir': '<(wakaama_example_dir)/shared',
-    'wakaama_shared_sources': [
+    'wakaama_client_shared_sources': [
       '<(wakaama_shared_dir)/commandline.c',
-      # '<(wakaama_shared_dir)/connection.c',  # Plain Connection
       '<(wakaama_shared_dir)/dtlsconnection.c',  # DTLS Connection
       '<(wakaama_shared_dir)/memtrace.c',
       '<(wakaama_shared_dir)/platform.c',
     ],
+    'wakaama_server_shared_sources': [
+      '<(wakaama_shared_dir)/commandline.c',
+      '<(wakaama_shared_dir)/connection.c',  # Plain Connection
+      '<(wakaama_shared_dir)/memtrace.c',
+      '<(wakaama_shared_dir)/platform.c',
+    ],
+    'wakaama_server_dir': '<(wakaama_example_dir)/server',
     'wakaama_defines': [
       'LWM2M_BOOTSTRAP',
       'LWM2M_LITTLE_ENDIAN=<!(python <(deps_dir)/endianess.py)',
+    ],
+    'wakaama_client_defines': [
+      '<@(wakaama_defines)',
+      'LWM2M_CLIENT_MODE',
       'WITH_TINYDTLS',
       'DTLSv12',
       'WITH_SHA256',
       'DTLS_PSK',
       'DTLS_ECC',
+    ],
+    'wakaama_sever_defines': [
+      '<@(wakaama_defines)',
+      'LWM2M_SERVER_MODE',
     ],
   },
   'target_defaults': {

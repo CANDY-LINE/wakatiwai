@@ -144,11 +144,9 @@
       'include_dirs': [
         '<(wakaama_core_dir)',
         '<(wakaama_shared_dir)',
-        '<(tinydtls_dir)',
         '<(deps_dir)',
       ],
       'dependencies': [
-        'libtinydtls',
       ],
       'cflags': [
       ],
@@ -168,7 +166,6 @@
       'include_dirs': [
         '<(wakaama_core_dir)',
         '<(wakaama_shared_dir)',
-        '<(tinydtls_dir)',
         '<(wakaama_server_dir)',
       ],
       'dependencies': [
@@ -178,13 +175,55 @@
       'cflags': [
       ],
       'sources': [
-        '<(wakaama_server_dir)/lwm2mserver.c',
+        '<@(wakaama_server_sources)',
       ],
       'cflags_cc': [
         '-Wno-unused-value',
       ],
       'defines': [
         '<@(wakaama_sever_defines)',
+      ],
+    },
+    {
+      'target_name': 'liblwm2bootstrapmserver',
+      'type': 'static_library',
+      'include_dirs': [
+        '<(wakaama_core_dir)/er-coap-13',
+        '<(wakaama_core_dir)',
+      ],
+      'cflags': [
+      ],
+      'sources': [
+        '<@(wakaama_core_sources)',
+      ],
+      'cflags_cc': [
+          '-Wno-unused-value',
+      ],
+      'defines': [
+        '<@(wakaama_bootstrap_sever_defines)',
+      ],
+    },
+    {
+      'target_name': 'lwm2mbootstrapserver',
+      'type': 'executable',
+      'include_dirs': [
+        '<(wakaama_core_dir)',
+        '<(wakaama_shared_dir)',
+      ],
+      'dependencies': [
+        'liblwm2mservershared',
+        'liblwm2bootstrapmserver',
+      ],
+      'cflags': [
+      ],
+      'sources': [
+        '<@(wakaama_bootstrap_server_sources)',
+      ],
+      'cflags_cc': [
+        '-Wno-unused-value',
+      ],
+      'defines': [
+        '<@(wakaama_bootstrap_sever_defines)',
       ],
     },
   ]

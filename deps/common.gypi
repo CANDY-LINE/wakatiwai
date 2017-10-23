@@ -58,12 +58,20 @@
       '<(wakaama_shared_dir)/platform.c',
     ],
     'wakaama_server_dir': '<(wakaama_example_dir)/server',
+    'wakaama_server_sources': [
+      '<(wakaama_server_dir)/lwm2mserver.c',
+    ],
+    'wakaama_bootstrap_server_dir': '<(wakaama_example_dir)/bootstrap_server',
+    'wakaama_bootstrap_server_sources': [
+      '<(wakaama_bootstrap_server_dir)/bootstrap_info.c',
+      '<(wakaama_bootstrap_server_dir)/bootstrap_server.c',
+    ],
     'wakaama_defines': [
-      'LWM2M_BOOTSTRAP',
       'LWM2M_LITTLE_ENDIAN=<!(python <(deps_dir)/endianess.py)',
     ],
     'wakaama_client_defines': [
       '<@(wakaama_defines)',
+      'LWM2M_BOOTSTRAP',
       'LWM2M_CLIENT_MODE',
       'WITH_TINYDTLS',
       'DTLSv12',
@@ -73,7 +81,12 @@
     ],
     'wakaama_sever_defines': [
       '<@(wakaama_defines)',
+      'LWM2M_BOOTSTRAP',
       'LWM2M_SERVER_MODE',
+    ],
+    'wakaama_bootstrap_sever_defines': [
+      '<@(wakaama_defines)',
+      'LWM2M_BOOTSTRAP_SERVER_MODE',
     ],
   },
   'target_defaults': {

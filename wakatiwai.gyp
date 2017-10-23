@@ -1,11 +1,15 @@
 {
   'variables': {
+    'version': '1.0.0',
     'module_path%': 'build',
     'deps_dir': './deps',
     'src_dir': './src',
     'client_dir': '<(src_dir)/client',
     'bootstrap_server_dir': '<(src_dir)/bootstrap_server',
     'executable': 'wakatiwaiclient',
+    'wakatiwai_defines': [
+      'WAKATIWAI_VERSION="<(version)"',
+    ],
   },
   'includes': [
     'deps/common.gypi'
@@ -41,6 +45,7 @@
       ],
       'defines': [
         '<@(wakaama_client_defines)',
+        '<@(wakatiwai_defines)',
       ],
     },
     {

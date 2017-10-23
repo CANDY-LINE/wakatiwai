@@ -4,6 +4,7 @@
     'deps_dir': './deps',
     'src_dir': './src',
     'client_dir': '<(src_dir)/client',
+    'bootstrap_server_dir': '<(src_dir)/bootstrap_server',
     'executable': 'wakatiwaiclient',
   },
   'includes': [
@@ -47,11 +48,14 @@
       'type': 'none',
       'dependencies': [
         '<(deps_dir)/wakaama.gyp:lwm2mserver',
+        '<(deps_dir)/wakaama.gyp:lwm2mbootstrapserver',
         '<(executable)',
       ],
       'copies': [
         {
           'files': [
+            '<(bootstrap_server_dir)/bootstrap_server.ini',
+            '<(PRODUCT_DIR)/lwm2mbootstrapserver',
             '<(PRODUCT_DIR)/lwm2mserver',
             '<(PRODUCT_DIR)/<(executable)',
           ],

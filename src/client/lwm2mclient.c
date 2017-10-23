@@ -97,6 +97,9 @@
 #define MAX_PACKET_SIZE 1024
 #define DEFAULT_SERVER_IPV6 "[::1]"
 #define DEFAULT_SERVER_IPV4 "127.0.0.1"
+#ifndef WAKATIWAI_VERSION
+#define WAKATIWAI_VERSION "development"
+#endif /* WAKATIWAI_VERSION */
 
 int g_reboot = 0;
 static int g_quit = 0;
@@ -387,8 +390,9 @@ static void close_backup_object()
 
 void print_usage(void)
 {
-    fprintf(stderr, "Usage: lwm2mclient [OPTION]\r\n");
+    fprintf(stderr, "Usage: wakatiwai [OPTION]\r\n");
     fprintf(stderr, "Launch a LWM2M client.\r\n");
+    fprintf(stderr, "Wakatiwai Version: " WAKATIWAI_VERSION "\r\n");
     fprintf(stderr, "Options:\r\n");
     fprintf(stderr, "  -n NAME\tSet the endpoint name of the Client. Default: wakatiwai\r\n");
     fprintf(stderr, "  -l PORT\tSet the local UDP port of the Client. Default: 56830\r\n");

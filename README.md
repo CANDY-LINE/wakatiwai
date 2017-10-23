@@ -72,3 +72,9 @@ Run the following command on your local machine to start LwM2M Bootstrap Server 
 ```
 $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 ```
+
+## Revision History
+
+### 1.0.0
+
+- Initial Release

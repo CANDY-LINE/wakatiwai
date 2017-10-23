@@ -48,7 +48,7 @@ And you can get `wakatiwaiclient` executable file under `build` directory.
 
 ## License
 
-Copyright (c) 2017 CANDY LINE INC.
+Copyright (c) 2017 [CANDY LINE INC.](https://www.candy-line.io)
 
 - [Eclipse Public License v2.0](https://www.eclipse.org/legal/epl-2.0/)
 - [Eclipse Distribution License v1.0](https://www.eclipse.org/org/documents/edl-v10.php)

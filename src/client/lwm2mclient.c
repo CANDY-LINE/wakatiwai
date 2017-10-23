@@ -390,7 +390,7 @@ void print_usage(void)
     fprintf(stderr, "Usage: lwm2mclient [OPTION]\r\n");
     fprintf(stderr, "Launch a LWM2M client.\r\n");
     fprintf(stderr, "Options:\r\n");
-    fprintf(stderr, "  -n NAME\tSet the endpoint name of the Client. Default: testlwm2mclient\r\n");
+    fprintf(stderr, "  -n NAME\tSet the endpoint name of the Client. Default: wakatiwai\r\n");
     fprintf(stderr, "  -l PORT\tSet the local UDP port of the Client. Default: 56830\r\n");
     fprintf(stderr, "  -h HOST\tSet the hostname of the LWM2M Server to connect to. Default: localhost\r\n");
     fprintf(stderr, "  -p PORT\tSet the port of the LWM2M Server to connect to. Default: "LWM2M_STANDARD_PORT_STR"\r\n");

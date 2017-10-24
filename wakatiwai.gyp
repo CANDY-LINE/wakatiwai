@@ -1,6 +1,6 @@
 {
   'variables': {
-    'version': '1.0.0',
+    'version': '1.0.1',
     'module_path%': 'build',
     'deps_dir': './deps',
     'src_dir': './src',
@@ -53,14 +53,14 @@
       'type': 'none',
       'dependencies': [
         '<(deps_dir)/wakaama.gyp:lwm2mserver',
-        '<(deps_dir)/wakaama.gyp:lwm2mbootstrapserver',
+        '<(deps_dir)/wakaama.gyp:bootstrapserver',
         '<(executable)',
       ],
       'copies': [
         {
           'files': [
             '<(bootstrap_server_dir)/bootstrap_server.ini',
-            '<(PRODUCT_DIR)/lwm2mbootstrapserver',
+            '<(PRODUCT_DIR)/bootstrapserver',
             '<(PRODUCT_DIR)/lwm2mserver',
             '<(PRODUCT_DIR)/<(executable)',
           ],

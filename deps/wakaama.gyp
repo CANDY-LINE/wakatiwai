@@ -204,7 +204,7 @@
       ],
     },
     {
-      'target_name': 'lwm2mbootstrapserver',
+      'target_name': 'bootstrapserver',
       'type': 'executable',
       'include_dirs': [
         '<(wakaama_core_dir)',

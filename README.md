@@ -75,6 +75,11 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 1.0.1
+
+- Fix the output executable file name
+- Replace Eclipse Distribution License with 3-Clause BSD
+
 ### 1.0.0
 
 - Initial Release

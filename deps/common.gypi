@@ -97,6 +97,9 @@
           'LWM2M_WITH_LOGS',
           'WITH_LOGS',
         ],
+        'defines!': [
+          'NDEBUG',
+        ],
         'cflags_cc!': [
           '-O3',
           '-Os',
@@ -126,6 +129,9 @@
         },
       },
       'Release': {
+        'defines': [
+          'NDEBUG',
+        ],
         'defines!': [
           'LWM2M_WITH_LOGS',
           'WITH_LOGS',

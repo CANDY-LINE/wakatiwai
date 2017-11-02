@@ -390,7 +390,7 @@ static void close_backup_object()
 
 void print_usage(void)
 {
-    fprintf(stderr, "Usage: wakatiwai [OPTION]\r\n");
+    fprintf(stderr, "Usage: " WAKATIWAI_EXECUTABLE " [OPTION]\r\n");
     fprintf(stderr, "Launch a LWM2M client.\r\n");
     fprintf(stderr, "Wakatiwai Version: " WAKATIWAI_VERSION "\r\n");
     fprintf(stderr, "Options:\r\n");
@@ -402,7 +402,7 @@ void print_usage(void)
     fprintf(stderr, "  -t TIME\tSet the lifetime of the Client. Default: 300\r\n");
     fprintf(stderr, "  -b\t\tBootstrap requested.\r\n");
     fprintf(stderr, "  -r SERVERID\tSet the Server ID. Default: 99\r\n");
-    fprintf(stderr, "  -o OBJECTIDCSV\tSet the Object ID CSV. Default: 0,1,2,3\r\n");
+    fprintf(stderr, "  -o OBJIDCSV\tSet the Object ID CSV. Default: 0,1,2,3\r\n");
 #ifdef WITH_TINYDTLS
     fprintf(stderr, "  -i STRING\tSet the device management or bootstrap server PSK identity. If not set use none secure mode\r\n");
     fprintf(stderr, "  -s HEXSTRING\tSet the device management or bootstrap server Pre-Shared-Key. If not set use none secure mode\r\n");

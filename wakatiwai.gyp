@@ -9,6 +9,7 @@
     'executable': 'wakatiwaiclient',
     'wakatiwai_defines': [
       'WAKATIWAI_VERSION="<(version)"',
+      'WAKATIWAI_EXECUTABLE="<(executable)"'
     ],
   },
   'includes': [

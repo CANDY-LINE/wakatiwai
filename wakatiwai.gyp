@@ -1,6 +1,6 @@
 {
   'variables': {
-    'version': '1.0.1',
+    'version': '1.0.2',
     'module_path%': 'build',
     'deps_dir': './deps',
     'src_dir': './src',
@@ -9,6 +9,7 @@
     'executable': 'wakatiwaiclient',
     'wakatiwai_defines': [
       'WAKATIWAI_VERSION="<(version)"',
+      'WAKATIWAI_EXECUTABLE="<(executable)"'
     ],
   },
   'includes': [

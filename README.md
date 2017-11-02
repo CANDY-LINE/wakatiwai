@@ -75,6 +75,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 1.0.2
+
+- Suppress tinyDTLS debug logs for Release build
+
 ### 1.0.1
 
 - Fix the output executable file name

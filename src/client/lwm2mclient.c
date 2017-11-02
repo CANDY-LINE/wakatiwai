@@ -628,6 +628,11 @@ int main(int argc, char *argv[])
         opt += 1;
     }
 
+    if ((pskId != NULL && psk == NULL) || (pskId == NULL && psk != NULL)) {
+          print_usage();
+          return 0;
+    }
+
     if (!server)
     {
         server = (AF_INET == data.addressFamily ? DEFAULT_SERVER_IPV4 : DEFAULT_SERVER_IPV6);

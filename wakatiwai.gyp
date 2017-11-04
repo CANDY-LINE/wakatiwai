@@ -22,6 +22,7 @@
       'include_dirs': [
         '<(wakaama_core_dir)',
         '<(wakaama_shared_dir)',
+        '<(wakaama_shared_dir)/tinydtls',
         '<(deps_dir)/tinydtls',
         '<(deps_dir)',
         '<(client_dir)',

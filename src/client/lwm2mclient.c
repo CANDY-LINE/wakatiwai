@@ -75,6 +75,7 @@
 #include "commandline.h"
 #ifdef WITH_TINYDTLS
 #include "dtlsconnection.h"
+#include "dtls_debug.h"
 #else
 #include "connection.h"
 #endif
@@ -654,6 +655,9 @@ int main(int argc, char *argv[])
      * Those functions are located in their respective object file.
      */
 #ifdef WITH_TINYDTLS
+#ifdef NDEBUG
+    dtls_set_log_level(DTLS_LOG_CRIT);
+#endif
     if (psk != NULL)
     {
         pskLen = strlen(psk) / 2;

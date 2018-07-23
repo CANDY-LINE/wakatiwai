@@ -793,8 +793,8 @@ int main(int argc, char *argv[])
         tv.tv_usec = 0;
 
         FD_ZERO(&readfds);
-        FD_SET(data.sock, &readfds);
-        FD_SET(STDIN_FILENO, &readfds);
+        FD_SET(data.sock, &readfds);    // for IP socket
+        FD_SET(STDIN_FILENO, &readfds); // for stdin
 
         /*
          * This function does two things:
@@ -851,6 +851,7 @@ int main(int argc, char *argv[])
 #endif
 
         if ((lwm2mH->state == STATE_READY) && (lwm2mH->observedList != NULL)) {
+            // Issue an Observe command to poll an external process via stdout
             fprintf(stdout, "/observe:\r\n");
             fflush(stdout);
         }
@@ -942,7 +943,8 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            // Handle only `observe` response
+            // Handle `observe` command response from an external process via stdin
+            // as the command is the only one initiated from the process.
             else if (FD_ISSET(STDIN_FILENO, &readfds))
             {
                 uint8_t err = handle_observe_response(lwm2mH);

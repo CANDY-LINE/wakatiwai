@@ -75,6 +75,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 1.1.0
+
+- Bump wakaama revision
+
 ### 1.0.3
 
 - Set TinyDTLS log level to CRIT so to output logs to stderr

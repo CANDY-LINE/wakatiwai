@@ -689,7 +689,8 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    char serverUri[50];
+    int serverUriLen = 9 + strlen(server) + strlen(serverPort);
+    char serverUri[serverUriLen];
     sprintf (serverUri, "coap://%s:%s", server, serverPort);
     if (NULL == objArray) {
         objArray = lwm2m_malloc(sizeof(lwm2m_object_t *) * (objCount + 4));

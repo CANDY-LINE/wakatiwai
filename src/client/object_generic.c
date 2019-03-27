@@ -587,9 +587,46 @@ static uint8_t prv_generic_create(uint16_t instanceId,
                                   lwm2m_data_t * dataArray,
                                   lwm2m_object_t * objectP)
 {
-    uint8_t result = COAP_501_NOT_IMPLEMENTED;
+    uint16_t i = 0;
+    uint8_t messageId = 0x01;
+    uint8_t result;
     parent_context_t * context = (parent_context_t *)objectP->userData;
-    // TODO
+    size_t payloadRawLen = 8 + lwm2m_get_payload_size(numData, dataArray);
+    uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
+    payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
+    payloadRaw[i++] = messageId;                // Message Id associated with Data Type
+    payloadRaw[i++] = context->objectId & 0xff; // ObjectID LSB
+    payloadRaw[i++] = context->objectId >> 8;   // ObjectID MSB
+    payloadRaw[i++] = instanceId & 0xff;        // InstanceId LSB
+    payloadRaw[i++] = instanceId >> 8;          // InstanceId MSB
+    payloadRaw[i++] = numData & 0xff;           // # of required data LSB (0x0000=ALL)
+    payloadRaw[i++] = numData >> 8;             // # of required data MSB
+    lwm2m_write_payload(&i, payloadRaw, numData, dataArray);
+
+    fprintf(stderr, "prv_generic_create:objectId=>%hu, instanceId=>%hu, numData=>%d\r\n",
+    context->objectId, instanceId, numData);
+    result = request_command(context, "create", payloadRaw, payloadRawLen);
+    lwm2m_free(payloadRaw);
+
+    /*
+    * Response Data Format (result = COAP_NO_ERROR)
+    * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
+    * 00 ... Message Id associated with Data Type
+    * 45 ... Result Status Code e.g. COAP_205_CONTENT
+    * 00 ... ObjectID LSB
+    * 00 ... ObjectID MSB
+    * 00 ... InstanceId LSB
+    * 00 ... InstanceId MSB
+    * 00 ... always 00
+    * 00 ... always 00
+    */
+    uint8_t * response = context->response;
+    if (COAP_NO_ERROR == result && response[0] == 0x02 && messageId == response[1]) {
+      result = response[2];
+    } else {
+      result = COAP_400_BAD_REQUEST;
+    }
+    response_free(context);
     fprintf(stderr, "prv_generic_create:result=>%u\r\n", result);
     return result;
 }
@@ -597,9 +634,45 @@ static uint8_t prv_generic_create(uint16_t instanceId,
 static uint8_t prv_generic_delete(uint16_t instanceId,
                                   lwm2m_object_t * objectP)
 {
-    uint8_t result = COAP_501_NOT_IMPLEMENTED;
+    uint16_t i = 0;
+    uint8_t messageId = 0x01;
+    uint8_t result;
     parent_context_t * context = (parent_context_t *)objectP->userData;
-    // TODO
+    size_t payloadRawLen = 8;
+    uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
+    payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
+    payloadRaw[i++] = messageId;                // Message Id associated with Data Type
+    payloadRaw[i++] = context->objectId & 0xff; // ObjectID LSB
+    payloadRaw[i++] = context->objectId >> 8;   // ObjectID MSB
+    payloadRaw[i++] = instanceId & 0xff;        // InstanceId LSB
+    payloadRaw[i++] = instanceId >> 8;          // InstanceId MSB
+    payloadRaw[i++] = 0;                        // # of required data LSB (Always 0x0000)
+    payloadRaw[i++] = 0;                        // # of required data MSB
+
+    fprintf(stderr, "prv_generic_delete:objectId=>%hu, instanceId=>%hu\r\n",
+      context->objectId, instanceId);
+    result = request_command(context, "delete", payloadRaw, payloadRawLen);
+    lwm2m_free(payloadRaw);
+
+    /*
+    * Response Data Format (result = COAP_NO_ERROR)
+    * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
+    * 00 ... Message Id associated with Data Type
+    * 45 ... Result Status Code e.g. COAP_202_DELETED
+    * 00 ... ObjectID LSB
+    * 00 ... ObjectID MSB
+    * 00 ... InstanceId LSB
+    * 00 ... InstanceId MSB
+    * 00 ... always 00
+    * 00 ... always 00
+    */
+    uint8_t * response = context->response;
+    if (COAP_NO_ERROR == result && response[0] == 0x02 && messageId == response[1]) {
+        result = response[2];
+    } else {
+        result = COAP_400_BAD_REQUEST;
+    }
+    response_free(context);
     fprintf(stderr, "prv_generic_delete:result=>%u\r\n", result);
     return result;
 }

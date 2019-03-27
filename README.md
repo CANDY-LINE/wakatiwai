@@ -75,6 +75,11 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 1.3.0
+
+- Add Create method and Delete method support
+- Fix a potential buffer overflow error
+
 ### 1.2.0
 
 - Bump wakaama revision to v1.0

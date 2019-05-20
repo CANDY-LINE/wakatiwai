@@ -114,7 +114,6 @@ lwm2m_object_t * backupObjectArray[BACKUP_OBJECT_COUNT];
 typedef struct
 {
     lwm2m_object_t * securityObjP;
-    lwm2m_object_t * serverObject;
     int sock;
 #ifdef WITH_TINYDTLS
     dtls_connection_t * connList;

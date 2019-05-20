@@ -166,7 +166,7 @@ void * lwm2m_connect_server(uint16_t secObjInstID,
 
     dataP = (client_data_t *)userData;
 
-    uri = get_server_uri(dataP->securityObjP, secObjInstID);
+    uri = server_get_uri(dataP->securityObjP, secObjInstID);
 
     if (uri == NULL) return NULL;
 
@@ -409,6 +409,27 @@ void print_usage(void)
     fprintf(stderr, "  -s HEXSTRING\tSet the device management or bootstrap server Pre-Shared-Key. If not set use none secure mode\r\n");
 #endif
     fprintf(stderr, "\r\n");
+}
+
+static char * server_get_uri(lwm2m_object_t * obj, uint16_t instanceId) {
+    int size = 1;
+    lwm2m_data_t * dataP = lwm2m_data_new(size);
+    dataP->id = 0; // security server uri
+    char * uriBuffer;
+
+    obj->readFunc(instanceId, &size, &dataP, obj);
+    if (dataP != NULL &&
+            dataP->type == LWM2M_TYPE_STRING &&
+            dataP->value.asBuffer.length > 0) {
+        uriBuffer = lwm2m_malloc(dataP->value.asBuffer.length + 1);
+        memset(uriBuffer, 0, dataP->value.asBuffer.length + 1);
+        strncpy(uriBuffer, (const char *) dataP->value.asBuffer.buffer, dataP->value.asBuffer.length);
+        lwm2m_data_free(size, dataP);
+        return uriBuffer;
+    }
+    lwm2m_data_free(size, dataP);
+    return NULL;
+
 }
 
 static uint16_t * parse_object_id_csv(const char * objectIdCsv, uint16_t * objCount) {

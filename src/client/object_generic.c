@@ -360,8 +360,8 @@ static size_t lwm2m_write_payload(uint16_t * i,
         payloadRaw[(*i)++] = id & 0xff;  // ResourceId LSB
         payloadRaw[(*i)++] = id >> 8;    // ResourceId MSB
         payloadRaw[(*i)++] = dataArray[j].type; // Resouce Data Type
-        payloadRaw[(*i)++] = 0x00;       // Length of resource data LSB
-        payloadRaw[(*i)++] = 0x00;       // Length of resource data MSB
+        payloadRaw[(*i)++] = 0x00;       // Length of resource data LSB (Update later)
+        payloadRaw[(*i)++] = 0x00;       // Length of resource data MSB (Update later)
         len = 0;
         switch (dataArray[j].type) {
             case LWM2M_TYPE_STRING:

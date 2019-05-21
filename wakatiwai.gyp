@@ -34,7 +34,6 @@
         '<(deps_dir)/wakaama.gyp:liblwm2mclient',
         '<(deps_dir)/wakaama.gyp:liblwm2mclientshared',
         '<(deps_dir)/wakaama.gyp:libtinydtls',
-        '<(deps_dir)/wakaama.gyp:lwm2mclientcoreobj',
       ],
       'cflags': [
       ],

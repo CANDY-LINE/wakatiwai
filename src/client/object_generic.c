@@ -789,3 +789,91 @@ uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
     }
     return err;
 }
+
+uint8_t backup_object(uint16_t objectId)
+{
+    uint16_t i = 0;
+    uint8_t messageId = 0x01;
+    uint8_t result;
+    parent_context_t context;
+    size_t payloadRawLen = 8;
+    uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
+    payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
+    payloadRaw[i++] = messageId;                // Message Id associated with Data Type
+    payloadRaw[i++] = context.objectId & 0xff;  // ObjectID LSB
+    payloadRaw[i++] = context.objectId >> 8;    // ObjectID MSB
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+
+    fprintf(stderr, "backup_object:objectId=>%hu\r\n",
+        context.objectId);
+    result = request_command(&context, "backup", payloadRaw, payloadRawLen);
+    lwm2m_free(payloadRaw);
+
+    /*
+    * Response Data Format (result = COAP_NO_ERROR)
+    * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
+    * 00 ... Message Id associated with Data Type
+    * 45 ... Result Status Code e.g. COAP_205_CONTENT
+    * 00 ... ObjectID LSB
+    * 00 ... ObjectID MSB
+    * 00 ... always 00
+    * 00 ... always 00
+    * 00 ... always 00
+    * 00 ... always 00
+    */
+    uint8_t * response = context.response;
+    if (COAP_NO_ERROR == result && response[0] == 0x02 && messageId == response[1]) {
+      result = response[2];
+    } else {
+      result = COAP_400_BAD_REQUEST;
+    }
+    fprintf(stderr, "backup_object:result=>0x%X\r\n", result);
+    return result;
+}
+
+uint8_t restore_object(uint16_t objectId)
+{
+    uint16_t i = 0;
+    uint8_t messageId = 0x01;
+    uint8_t result;
+    parent_context_t context;
+    size_t payloadRawLen = 8;
+    uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
+    payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
+    payloadRaw[i++] = messageId;                // Message Id associated with Data Type
+    payloadRaw[i++] = context.objectId & 0xff;  // ObjectID LSB
+    payloadRaw[i++] = context.objectId >> 8;    // ObjectID MSB
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+
+    fprintf(stderr, "restore_object:objectId=>%hu\r\n",
+        context.objectId);
+    result = request_command(&context, "restore", payloadRaw, payloadRawLen);
+    lwm2m_free(payloadRaw);
+
+    /*
+    * Response Data Format (result = COAP_NO_ERROR)
+    * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
+    * 00 ... Message Id associated with Data Type
+    * 45 ... Result Status Code e.g. COAP_205_CONTENT
+    * 00 ... ObjectID LSB
+    * 00 ... ObjectID MSB
+    * 00 ... always 00
+    * 00 ... always 00
+    * 00 ... always 00
+    * 00 ... always 00
+    */
+    uint8_t * response = context.response;
+    if (COAP_NO_ERROR == result && response[0] == 0x02 && messageId == response[1]) {
+      result = response[2];
+    } else {
+      result = COAP_400_BAD_REQUEST;
+    }
+    fprintf(stderr, "restore_object:result=>0x%X\r\n", result);
+    return result;
+}

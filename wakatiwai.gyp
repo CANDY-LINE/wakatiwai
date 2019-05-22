@@ -1,6 +1,6 @@
 {
   'variables': {
-    'version': '1.3.0',
+    'version': '2.0.0',
     'module_path%': 'build',
     'deps_dir': './deps',
     'src_dir': './src',
@@ -34,13 +34,13 @@
         '<(deps_dir)/wakaama.gyp:liblwm2mclient',
         '<(deps_dir)/wakaama.gyp:liblwm2mclientshared',
         '<(deps_dir)/wakaama.gyp:libtinydtls',
-        '<(deps_dir)/wakaama.gyp:lwm2mclientcoreobj',
       ],
       'cflags': [
       ],
       'sources': [
         '<(client_dir)/lwm2mclient.c',
         '<(client_dir)/object_generic.c',
+        '<(client_dir)/dtlsconnection.c',  # DTLS Connection
       ],
       'cflags_cc': [
         '-Wno-unused-value',

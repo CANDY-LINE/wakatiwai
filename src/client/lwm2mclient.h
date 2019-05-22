@@ -43,6 +43,12 @@
 #define LWM2MCLIENT_H_
 
 #include "liblwm2m.h"
+#ifdef WITH_TINYDTLS
+#include "dtlsconnection.h"
+#include "dtls_debug.h"
+#else
+#include "connection.h"
+#endif
 
 #define MAX_MESSAGE_SIZE 65536
 #define MAX_RESOURCES 65536
@@ -50,28 +56,27 @@
 
 extern int g_reboot;
 
+typedef struct
+{
+    lwm2m_object_t * securityObjP;
+    int sock;
+#ifdef WITH_TINYDTLS
+    dtls_connection_t * connList;
+    lwm2m_context_t * lwm2mH;
+#else
+    connection_t * connList;
+#endif
+    int addressFamily;
+    uint8_t showMessageDump;
+} client_data_t;
+
 /*
  * object_generic.c
  */
 lwm2m_object_t * get_object(uint16_t objectId);
 void free_object(lwm2m_object_t * objectP);
 uint8_t handle_observe_response(lwm2m_context_t * lwm2mH);
-
-/*
- * object_server.c
- */
-lwm2m_object_t * get_server_object(int serverId, const char* binding, int lifetime, bool storing);
-void clean_server_object(lwm2m_object_t * object);
-void display_server_object(lwm2m_object_t * objectP);
-void copy_server_object(lwm2m_object_t * objectDest, lwm2m_object_t * objectSrc);
-
-/*
- * object_security.c
- */
-lwm2m_object_t * get_security_object(int serverId, const char* serverUri, char * bsPskId, char * psk, uint16_t pskLen, bool isBootstrap);
-void clean_security_object(lwm2m_object_t * objectP);
-char * get_server_uri(lwm2m_object_t * objectP, uint16_t secObjInstID);
-void display_security_object(lwm2m_object_t * objectP);
-void copy_security_object(lwm2m_object_t * objectDest, lwm2m_object_t * objectSrc);
+uint8_t backup_object(uint16_t objectId);
+uint8_t restore_object(uint16_t objectId);
 
 #endif /* LWM2MCLIENT_H_ */

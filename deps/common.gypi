@@ -40,14 +40,9 @@
     ],
     'wakaama_example_dir': '<(deps_dir)/wakaama/examples',
     'wakaama_client_dir': '<(wakaama_example_dir)/client',
-    'wakaama_clientcoreobj_sources': [
-      '<(wakaama_client_dir)/object_security.c',
-      '<(wakaama_client_dir)/object_server.c',
-    ],
     'wakaama_shared_dir': '<(wakaama_example_dir)/shared',
     'wakaama_client_shared_sources': [
       '<(wakaama_shared_dir)/commandline.c',
-      '<(wakaama_shared_dir)/dtlsconnection.c',  # DTLS Connection
       '<(wakaama_shared_dir)/memtrace.c',
       '<(wakaama_shared_dir)/platform.c',
     ],

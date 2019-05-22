@@ -40,6 +40,7 @@
       'sources': [
         '<(client_dir)/lwm2mclient.c',
         '<(client_dir)/object_generic.c',
+        '<(client_dir)/dtlsconnection.c',  # DTLS Connection
       ],
       'cflags_cc': [
         '-Wno-unused-value',

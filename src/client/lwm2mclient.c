@@ -71,14 +71,7 @@
  */
 
 #include "lwm2mclient.h"
-#include "liblwm2m.h"
 #include "commandline.h"
-#ifdef WITH_TINYDTLS
-#include "dtlsconnection.h"
-#include "dtls_debug.h"
-#else
-#include "connection.h"
-#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -104,19 +97,6 @@ int g_reboot = 0;
 static int g_quit = 0;
 
 lwm2m_object_t ** objArray = NULL;
-
-typedef struct
-{
-    lwm2m_object_t * securityObjP;
-    int sock;
-#ifdef WITH_TINYDTLS
-    dtls_connection_t * connList;
-    lwm2m_context_t * lwm2mH;
-#else
-    connection_t * connList;
-#endif
-    int addressFamily;
-} client_data_t;
 
 void handle_sigint(int signum)
 {
@@ -317,6 +297,7 @@ void print_usage(void)
     fprintf(stderr, "  -l PORT\tSet the local UDP port of the Client. Default: 56830\r\n");
     fprintf(stderr, "  -4\t\tUse IPv4 connection. Default: IPv6 connection\r\n");
     fprintf(stderr, "  -o OBJIDCSV\tSet the Object ID CSV. Default: 0,1,2,3\r\n");
+    fprintf(stderr, "  -d\t\tShow packet dump\r\n");
     fprintf(stderr, "\r\n");
 }
 
@@ -456,6 +437,9 @@ int main(int argc, char *argv[])
             break;
         case '4':
             data.addressFamily = AF_INET;
+            break;
+        case 'd':
+            data.showMessageDump = 1;
             break;
         case 'o':
             opt++;
@@ -725,7 +709,9 @@ int main(int argc, char *argv[])
                     /*
                      * Display it in the STDERR
                      */
-                    output_buffer(stderr, buffer, numBytes, 0);
+                    if (data.showMessageDump) {
+                        output_buffer(stderr, buffer, numBytes, 0);
+                    }
 
                     connP = connection_find(data.connList, &addr, addrLen);
                     if (connP != NULL)

@@ -43,12 +43,32 @@
 #define LWM2MCLIENT_H_
 
 #include "liblwm2m.h"
+#ifdef WITH_TINYDTLS
+#include "dtlsconnection.h"
+#include "dtls_debug.h"
+#else
+#include "connection.h"
+#endif
 
 #define MAX_MESSAGE_SIZE 65536
 #define MAX_RESOURCES 65536
 #define URI_STRING_MAX_LEN 1024
 
 extern int g_reboot;
+
+typedef struct
+{
+    lwm2m_object_t * securityObjP;
+    int sock;
+#ifdef WITH_TINYDTLS
+    dtls_connection_t * connList;
+    lwm2m_context_t * lwm2mH;
+#else
+    connection_t * connList;
+#endif
+    int addressFamily;
+    uint8_t showMessageDump;
+} client_data_t;
 
 /*
  * object_generic.c

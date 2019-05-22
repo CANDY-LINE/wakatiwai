@@ -802,15 +802,14 @@ uint8_t backup_object(uint16_t objectId)
     uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
     payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
     payloadRaw[i++] = messageId;                // Message Id associated with Data Type
-    payloadRaw[i++] = context.objectId & 0xff;  // ObjectID LSB
-    payloadRaw[i++] = context.objectId >> 8;    // ObjectID MSB
+    payloadRaw[i++] = objectId & 0xff;          // ObjectID LSB
+    payloadRaw[i++] = objectId >> 8;            // ObjectID MSB
     payloadRaw[i++] = 0;                        // always 00
     payloadRaw[i++] = 0;                        // always 00
     payloadRaw[i++] = 0;                        // always 00
     payloadRaw[i++] = 0;                        // always 00
 
-    fprintf(stderr, "backup_object:objectId=>%hu\r\n",
-        context.objectId);
+    fprintf(stderr, "backup_object:objectId=>%hu\r\n", objectId);
     result = request_command(&context, "backup", payloadRaw, payloadRawLen);
     lwm2m_free(payloadRaw);
 
@@ -846,15 +845,14 @@ uint8_t restore_object(uint16_t objectId)
     uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
     payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
     payloadRaw[i++] = messageId;                // Message Id associated with Data Type
-    payloadRaw[i++] = context.objectId & 0xff;  // ObjectID LSB
-    payloadRaw[i++] = context.objectId >> 8;    // ObjectID MSB
+    payloadRaw[i++] = objectId & 0xff;          // ObjectID LSB
+    payloadRaw[i++] = objectId >> 8;            // ObjectID MSB
     payloadRaw[i++] = 0;                        // always 00
     payloadRaw[i++] = 0;                        // always 00
     payloadRaw[i++] = 0;                        // always 00
     payloadRaw[i++] = 0;                        // always 00
 
-    fprintf(stderr, "restore_object:objectId=>%hu\r\n",
-        context.objectId);
+    fprintf(stderr, "restore_object:objectId=>%hu\r\n", objectId);
     result = request_command(&context, "restore", payloadRaw, payloadRawLen);
     lwm2m_free(payloadRaw);
 

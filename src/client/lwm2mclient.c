@@ -71,14 +71,7 @@
  */
 
 #include "lwm2mclient.h"
-#include "liblwm2m.h"
 #include "commandline.h"
-#ifdef WITH_TINYDTLS
-#include "dtlsconnection.h"
-#include "dtls_debug.h"
-#else
-#include "connection.h"
-#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -96,8 +89,6 @@
 #include <signal.h>
 
 #define MAX_PACKET_SIZE 1024
-#define DEFAULT_SERVER_IPV6 "[::1]"
-#define DEFAULT_SERVER_IPV4 "127.0.0.1"
 #ifndef WAKATIWAI_VERSION
 #define WAKATIWAI_VERSION "development"
 #endif /* WAKATIWAI_VERSION */
@@ -106,24 +97,6 @@ int g_reboot = 0;
 static int g_quit = 0;
 
 lwm2m_object_t ** objArray = NULL;
-
-// only backup security and server objects
-# define BACKUP_OBJECT_COUNT 2
-lwm2m_object_t * backupObjectArray[BACKUP_OBJECT_COUNT];
-
-typedef struct
-{
-    lwm2m_object_t * securityObjP;
-    lwm2m_object_t * serverObject;
-    int sock;
-#ifdef WITH_TINYDTLS
-    dtls_connection_t * connList;
-    lwm2m_context_t * lwm2mH;
-#else
-    connection_t * connList;
-#endif
-    int addressFamily;
-} client_data_t;
 
 void handle_sigint(int signum)
 {
@@ -166,7 +139,7 @@ void * lwm2m_connect_server(uint16_t secObjInstID,
 
     dataP = (client_data_t *)userData;
 
-    uri = get_server_uri(dataP->securityObjP, secObjInstID);
+    uri = server_get_uri(dataP->securityObjP, secObjInstID);
 
     if (uri == NULL) return NULL;
 
@@ -292,60 +265,6 @@ static void prv_initiate_bootstrap(char * buffer,
     }
 }
 
-static void prv_backup_objects(lwm2m_context_t * context)
-{
-    uint16_t i;
-
-    for (i = 0; i < BACKUP_OBJECT_COUNT; i++) {
-        if (NULL != backupObjectArray[i]) {
-            switch (backupObjectArray[i]->objID)
-            {
-            case LWM2M_SECURITY_OBJECT_ID:
-                clean_security_object(backupObjectArray[i]);
-                lwm2m_free(backupObjectArray[i]);
-                break;
-            case LWM2M_SERVER_OBJECT_ID:
-                clean_server_object(backupObjectArray[i]);
-                lwm2m_free(backupObjectArray[i]);
-                break;
-            default:
-                break;
-            }
-        }
-        backupObjectArray[i] = (lwm2m_object_t *)lwm2m_malloc(sizeof(lwm2m_object_t));
-        memset(backupObjectArray[i], 0, sizeof(lwm2m_object_t));
-    }
-
-    /*
-     * Backup content of objects 0 (security) and 1 (server)
-     */
-    copy_security_object(backupObjectArray[0], (lwm2m_object_t *)LWM2M_LIST_FIND(context->objectList, LWM2M_SECURITY_OBJECT_ID));
-    copy_server_object(backupObjectArray[1], (lwm2m_object_t *)LWM2M_LIST_FIND(context->objectList, LWM2M_SERVER_OBJECT_ID));
-}
-
-static void prv_restore_objects(lwm2m_context_t * context)
-{
-    lwm2m_object_t * targetP;
-
-    /*
-     * Restore content  of objects 0 (security) and 1 (server)
-     */
-    targetP = (lwm2m_object_t *)LWM2M_LIST_FIND(context->objectList, LWM2M_SECURITY_OBJECT_ID);
-    // first delete internal content
-    clean_security_object(targetP);
-    // then restore previous object
-    copy_security_object(targetP, backupObjectArray[0]);
-
-    targetP = (lwm2m_object_t *)LWM2M_LIST_FIND(context->objectList, LWM2M_SERVER_OBJECT_ID);
-    // first delete internal content
-    clean_server_object(targetP);
-    // then restore previous object
-    copy_server_object(targetP, backupObjectArray[1]);
-
-    // restart the old servers
-    fprintf(stderr, "[BOOTSTRAP] ObjectList restored\r\n");
-}
-
 static void update_bootstrap_info(lwm2m_client_state_t * previousBootstrapState,
         lwm2m_context_t * context)
 {
@@ -358,32 +277,11 @@ static void update_bootstrap_info(lwm2m_client_state_t * previousBootstrapState,
 #ifdef WITH_LOGS
                 fprintf(stderr, "[BOOTSTRAP] backup security and server objects\r\n");
 #endif
-                prv_backup_objects(context);
+                backup_object(LWM2M_SECURITY_OBJECT_ID);
+                backup_object(LWM2M_SERVER_OBJECT_ID);
                 break;
             default:
                 break;
-        }
-    }
-}
-
-static void close_backup_object()
-{
-    int i;
-    for (i = 0; i < BACKUP_OBJECT_COUNT; i++) {
-        if (NULL != backupObjectArray[i]) {
-            switch (backupObjectArray[i]->objID)
-            {
-            case LWM2M_SECURITY_OBJECT_ID:
-                clean_security_object(backupObjectArray[i]);
-                lwm2m_free(backupObjectArray[i]);
-                break;
-            case LWM2M_SERVER_OBJECT_ID:
-                clean_server_object(backupObjectArray[i]);
-                lwm2m_free(backupObjectArray[i]);
-                break;
-            default:
-                break;
-            }
         }
     }
 }
@@ -397,18 +295,31 @@ void print_usage(void)
     fprintf(stderr, "Options:\r\n");
     fprintf(stderr, "  -n NAME\tSet the endpoint name of the Client. Default: wakatiwai\r\n");
     fprintf(stderr, "  -l PORT\tSet the local UDP port of the Client. Default: 56830\r\n");
-    fprintf(stderr, "  -h HOST\tSet the hostname of the LWM2M Server to connect to. Default: localhost\r\n");
-    fprintf(stderr, "  -p PORT\tSet the port of the LWM2M Server to connect to. Default: "LWM2M_STANDARD_PORT_STR"\r\n");
     fprintf(stderr, "  -4\t\tUse IPv4 connection. Default: IPv6 connection\r\n");
-    fprintf(stderr, "  -t TIME\tSet the lifetime of the Client. Default: 300\r\n");
-    fprintf(stderr, "  -b\t\tBootstrap requested.\r\n");
-    fprintf(stderr, "  -r SERVERID\tSet the Server ID. Default: 99\r\n");
     fprintf(stderr, "  -o OBJIDCSV\tSet the Object ID CSV. Default: 0,1,2,3\r\n");
-#ifdef WITH_TINYDTLS
-    fprintf(stderr, "  -i STRING\tSet the device management or bootstrap server PSK identity. If not set use none secure mode\r\n");
-    fprintf(stderr, "  -s HEXSTRING\tSet the device management or bootstrap server Pre-Shared-Key. If not set use none secure mode\r\n");
-#endif
+    fprintf(stderr, "  -d\t\tShow packet dump\r\n");
     fprintf(stderr, "\r\n");
+}
+
+static char * server_get_uri(lwm2m_object_t * obj, uint16_t instanceId) {
+    int size = 1;
+    lwm2m_data_t * dataP = lwm2m_data_new(size);
+    dataP->id = 0; // security server uri
+    char * uriBuffer;
+
+    obj->readFunc(instanceId, &size, &dataP, obj);
+    if (dataP != NULL &&
+            dataP->type == LWM2M_TYPE_STRING &&
+            dataP->value.asBuffer.length > 0) {
+        uriBuffer = lwm2m_malloc(dataP->value.asBuffer.length + 1);
+        memset(uriBuffer, 0, dataP->value.asBuffer.length + 1);
+        strncpy(uriBuffer, (const char *) dataP->value.asBuffer.buffer, dataP->value.asBuffer.length);
+        lwm2m_data_free(size, dataP);
+        return uriBuffer;
+    }
+    lwm2m_data_free(size, dataP);
+    return NULL;
+
 }
 
 static uint16_t * parse_object_id_csv(const char * objectIdCsv, uint16_t * objCount) {
@@ -481,14 +392,8 @@ int main(int argc, char *argv[])
     int result;
     lwm2m_context_t * lwm2mH = NULL;
     const char * localPort = "56830";
-    const char * server = NULL;
-    const char * serverPort = LWM2M_STANDARD_PORT_STR;
     char * name = "wakatiwai";
-    int lifetime = 300;
     int opt;
-    bool bootstrapRequested = false;
-    bool serverPortChanged = false;
-    int serverId = 99;
     const char * objectIdCsv = NULL;
     uint16_t * objectIdArray = NULL;
     uint16_t objCount = 0;
@@ -496,11 +401,6 @@ int main(int argc, char *argv[])
 #ifdef LWM2M_BOOTSTRAP
     lwm2m_client_state_t previousState = STATE_INITIAL;
 #endif
-
-    char * pskId = NULL;
-    char * psk = NULL;
-    uint16_t pskLen = -1;
-    char * pskBuffer = NULL;
 
     memset(&data, 0, sizeof(client_data_t));
     data.addressFamily = AF_INET6;
@@ -517,43 +417,6 @@ int main(int argc, char *argv[])
         }
         switch (argv[opt][1])
         {
-        case 'b':
-            bootstrapRequested = true;
-            if (!serverPortChanged) serverPort = LWM2M_BSSERVER_PORT_STR;
-            break;
-        case 't':
-            opt++;
-            if (opt >= argc)
-            {
-                print_usage();
-                return 0;
-            }
-            if (1 != sscanf(argv[opt], "%d", &lifetime))
-            {
-                print_usage();
-                return 0;
-            }
-            break;
-#ifdef WITH_TINYDTLS
-        case 'i':
-            opt++;
-            if (opt >= argc)
-            {
-                print_usage();
-                return 0;
-            }
-            pskId = argv[opt];
-            break;
-        case 's':
-            opt++;
-            if (opt >= argc)
-            {
-                print_usage();
-                return 0;
-            }
-            psk = argv[opt];
-            break;
-#endif
         case 'n':
             opt++;
             if (opt >= argc)
@@ -572,40 +435,11 @@ int main(int argc, char *argv[])
             }
             localPort = argv[opt];
             break;
-        case 'h':
-            opt++;
-            if (opt >= argc)
-            {
-                print_usage();
-                return 0;
-            }
-            server = argv[opt];
-            break;
-        case 'p':
-            opt++;
-            if (opt >= argc)
-            {
-                print_usage();
-                return 0;
-            }
-            serverPort = argv[opt];
-            serverPortChanged = true;
-            break;
         case '4':
             data.addressFamily = AF_INET;
             break;
-        case 'r':
-            opt++;
-            if (opt >= argc)
-            {
-                print_usage();
-                return 0;
-            }
-            if (1 != sscanf(argv[opt], "%d", &serverId))
-            {
-                print_usage();
-                return 0;
-            }
+        case 'd':
+            data.showMessageDump = 1;
             break;
         case 'o':
             opt++;
@@ -629,16 +463,6 @@ int main(int argc, char *argv[])
         opt += 1;
     }
 
-    if ((pskId != NULL && psk == NULL) || (pskId == NULL && psk != NULL)) {
-          print_usage();
-          return 0;
-    }
-
-    if (!server)
-    {
-        server = (AF_INET == data.addressFamily ? DEFAULT_SERVER_IPV4 : DEFAULT_SERVER_IPV6);
-    }
-
     /*
      *This call an internal function that create an IPV6 socket on the port 5683.
      */
@@ -658,48 +482,12 @@ int main(int argc, char *argv[])
 #ifdef NDEBUG
     dtls_set_log_level(DTLS_LOG_CRIT);
 #endif
-    if (psk != NULL)
-    {
-        pskLen = strlen(psk) / 2;
-        pskBuffer = malloc(pskLen);
-
-        if (NULL == pskBuffer)
-        {
-            fprintf(stderr, "Failed to create PSK binary buffer\r\n");
-            return -1;
-        }
-        // Hex string to binary
-        char *h = psk;
-        char *b = pskBuffer;
-        char xlate[] = "0123456789ABCDEF";
-
-        for ( ; *h; h += 2, ++b)
-        {
-            char *l = strchr(xlate, toupper(*h));
-            char *r = strchr(xlate, toupper(*(h+1)));
-
-            if (!r || !l)
-            {
-                fprintf(stderr, "Failed to parse Pre-Shared-Key HEXSTRING\r\n");
-                return -1;
-            }
-
-            *b = ((l - xlate) << 4) + (r - xlate);
-        }
-    }
 #endif
 
-    int serverUriLen = 9 + strlen(server) + strlen(serverPort);
-    char serverUri[serverUriLen];
-    sprintf (serverUri, "coap://%s:%s", server, serverPort);
     if (NULL == objArray) {
         objArray = lwm2m_malloc(sizeof(lwm2m_object_t *) * (objCount + 4));
     }
-#ifdef LWM2M_BOOTSTRAP
-    objArray[0] = get_security_object(serverId, serverUri, pskId, pskBuffer, pskLen, bootstrapRequested);
-#else
-    objArray[0] = get_security_object(serverId, serverUri, pskId, pskBuffer, pskLen, false);
-#endif
+    objArray[0] = get_object(LWM2M_SECURITY_OBJECT_ID);
     if (NULL == objArray[0])
     {
         fprintf(stderr, "Failed to create security object\r\n");
@@ -707,7 +495,7 @@ int main(int argc, char *argv[])
     }
     data.securityObjP = objArray[0];
 
-    objArray[1] = get_server_object(serverId, "U", lifetime, false);
+    objArray[1] = get_object(LWM2M_SERVER_OBJECT_ID);
     if (NULL == objArray[1])
     {
         fprintf(stderr, "Failed to create server object\r\n");
@@ -843,7 +631,8 @@ int main(int argc, char *argv[])
 #ifdef WITH_LOGS
                 fprintf(stderr, "[BOOTSTRAP] restore security and server objects\r\n");
 #endif
-                prv_restore_objects(lwm2mH);
+                restore_object(LWM2M_SECURITY_OBJECT_ID);
+                restore_object(LWM2M_SERVER_OBJECT_ID);
                 lwm2mH->state = STATE_INITIAL;
             }
             else return -1;
@@ -920,7 +709,9 @@ int main(int argc, char *argv[])
                     /*
                      * Display it in the STDERR
                      */
-                    output_buffer(stderr, buffer, numBytes, 0);
+                    if (data.showMessageDump) {
+                        output_buffer(stderr, buffer, numBytes, 0);
+                    }
 
                     connP = connection_find(data.connList, &addr, addrLen);
                     if (connP != NULL)
@@ -959,22 +750,13 @@ int main(int argc, char *argv[])
      */
     if (g_quit == 1)
     {
-#ifdef WITH_TINYDTLS
-        free(pskBuffer);
-#endif
-
-#ifdef LWM2M_BOOTSTRAP
-        close_backup_object();
-#endif
         lwm2m_close(lwm2mH);
     }
     close(data.sock);
     connection_free(data.connList);
 
-    clean_security_object(objArray[0]);
-    lwm2m_free(objArray[0]);
-    clean_server_object(objArray[1]);
-    lwm2m_free(objArray[1]);
+    free_object(objArray[0]);
+    free_object(objArray[1]);
     free_object(objArray[2]);
     free_object(objArray[3]);
     for (i = 0; i < objCount; i++) {

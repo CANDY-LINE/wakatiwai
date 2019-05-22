@@ -237,15 +237,17 @@ static uint8_t prv_generic_read(uint16_t instanceId,
     payloadRaw[i++] = instanceId >> 8;          // InstanceId MSB
     payloadRaw[i++] = *numDataP & 0xff;         // # of required data LSB (0x0000=ALL)
     payloadRaw[i++] = *numDataP >> 8;           // # of required data MSB
+
+    fprintf(stderr, "prv_generic_read:objectId=>%hu, instanceId=>%hu, numData=>%d\r\n",
+        context->objectId, instanceId, *numDataP);
     for(; i < payloadRawLen;)
     {
         uint16_t id = (*dataArrayP)[j++].id;
         payloadRaw[i++] = id & 0xff; // ResourceId LSB
         payloadRaw[i++] = id >> 8;   // ResourceId MSB
+        fprintf(stderr, "prv_generic_read: [%d of %d] resourcId=>%hu\r\n", j, *numDataP, id);
     }
 
-    fprintf(stderr, "prv_generic_read:objectId=>%hu, instanceId=>%hu, numDataP=>%d\r\n",
-        context->objectId, instanceId, *numDataP);
     result = request_command(context, "read", payloadRaw, payloadRawLen);
     lwm2m_free(payloadRaw);
 
@@ -284,7 +286,7 @@ static uint8_t prv_generic_read(uint16_t instanceId,
             *dataArrayP = lwm2m_data_new(*numDataP);
             if (*dataArrayP == NULL) return COAP_500_INTERNAL_SERVER_ERROR;
         }
-        fprintf(stderr, "prv_generic_read:(lwm2m_data_new):*numDataP=>%d\r\n",
+        fprintf(stderr, "prv_generic_read:(lwm2m_data_new):numData=>%d\r\n",
             *numDataP);
         for (i = 0; i < *numDataP; i++)
         {
@@ -300,7 +302,7 @@ static uint8_t prv_generic_read(uint16_t instanceId,
         result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
-    fprintf(stderr, "prv_generic_read:result=>%u\r\n", result);
+    fprintf(stderr, "prv_generic_read:result=>0x%X\r\n", result);
     return result;
 }
 
@@ -358,8 +360,8 @@ static size_t lwm2m_write_payload(uint16_t * i,
         payloadRaw[(*i)++] = id & 0xff;  // ResourceId LSB
         payloadRaw[(*i)++] = id >> 8;    // ResourceId MSB
         payloadRaw[(*i)++] = dataArray[j].type; // Resouce Data Type
-        payloadRaw[(*i)++] = 0x00;       // Length of resource data LSB
-        payloadRaw[(*i)++] = 0x00;       // Length of resource data MSB
+        payloadRaw[(*i)++] = 0x00;       // Length of resource data LSB (Update later)
+        payloadRaw[(*i)++] = 0x00;       // Length of resource data MSB (Update later)
         len = 0;
         switch (dataArray[j].type) {
             case LWM2M_TYPE_STRING:
@@ -449,7 +451,7 @@ static uint8_t prv_generic_write(uint16_t instanceId,
         result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
-    fprintf(stderr, "prv_generic_write:result=>%u\r\n", result);
+    fprintf(stderr, "prv_generic_write:result=>0x%X\r\n", result);
     return result;
 }
 
@@ -501,7 +503,7 @@ static uint8_t prv_generic_execute(uint16_t instanceId,
         result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
-    fprintf(stderr, "prv_generic_execute:result=>%u\r\n", result);
+    fprintf(stderr, "prv_generic_execute:result=>0x%X\r\n", result);
     return result;
 }
 
@@ -536,7 +538,7 @@ static uint8_t prv_generic_discover(uint16_t instanceId,
         payloadRaw[i++] = id >> 8;   // ResourceId MSB
     }
 
-    fprintf(stderr, "prv_generic_discover:objectId=>%hu, instanceId=>%hu, numDataP=>%d\r\n",
+    fprintf(stderr, "prv_generic_discover:objectId=>%hu, instanceId=>%hu, numData=>%d\r\n",
         context->objectId, instanceId, *numDataP);
     result = request_command(context, "discover", payloadRaw, payloadRawLen);
     lwm2m_free(payloadRaw);
@@ -566,7 +568,7 @@ static uint8_t prv_generic_discover(uint16_t instanceId,
             *numDataP = response[7] + (((uint16_t)response[8]) << 8);
             *dataArrayP = lwm2m_data_new(*numDataP);
             if (*dataArrayP == NULL) return COAP_500_INTERNAL_SERVER_ERROR;
-            fprintf(stderr, "prv_generic_discover:(lwm2m_data_new):*numDataP=>%d\r\n",
+            fprintf(stderr, "prv_generic_discover:(lwm2m_data_new):numData=>%d\r\n",
                 *numDataP);
         }
         for (i = 0; i < *numDataP; i++)
@@ -578,7 +580,7 @@ static uint8_t prv_generic_discover(uint16_t instanceId,
         result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
-    fprintf(stderr, "prv_generic_discover:result=>%u\r\n", result);
+    fprintf(stderr, "prv_generic_discover:result=>0x%X\r\n", result);
     return result;
 }
 
@@ -627,7 +629,7 @@ static uint8_t prv_generic_create(uint16_t instanceId,
       result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
-    fprintf(stderr, "prv_generic_create:result=>%u\r\n", result);
+    fprintf(stderr, "prv_generic_create:result=>0x%X\r\n", result);
     return result;
 }
 
@@ -673,7 +675,7 @@ static uint8_t prv_generic_delete(uint16_t instanceId,
         result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
-    fprintf(stderr, "prv_generic_delete:result=>%u\r\n", result);
+    fprintf(stderr, "prv_generic_delete:result=>0x%X\r\n", result);
     return result;
 }
 
@@ -714,8 +716,10 @@ lwm2m_object_t * get_object(uint16_t objectId)
     genericObj->discoverFunc = prv_generic_discover;
     genericObj->writeFunc    = prv_generic_write;
     genericObj->executeFunc  = prv_generic_execute;
-    genericObj->createFunc   = prv_generic_create;
-    genericObj->deleteFunc   = prv_generic_delete;
+    if (LWM2M_DEVICE_OBJECT_ID != objectId) {
+        genericObj->createFunc   = prv_generic_create;
+        genericObj->deleteFunc   = prv_generic_delete;
+    }
 
     return genericObj;
 }
@@ -786,4 +790,90 @@ uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
         lwm2m_resource_value_changed(lwm2mH, &uri);
     }
     return err;
+}
+
+uint8_t backup_object(uint16_t objectId)
+{
+    uint16_t i = 0;
+    uint8_t messageId = 0x01;
+    uint8_t result;
+    parent_context_t context;
+    size_t payloadRawLen = 8;
+    uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
+    payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
+    payloadRaw[i++] = messageId;                // Message Id associated with Data Type
+    payloadRaw[i++] = objectId & 0xff;          // ObjectID LSB
+    payloadRaw[i++] = objectId >> 8;            // ObjectID MSB
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+
+    fprintf(stderr, "backup_object:objectId=>%hu\r\n", objectId);
+    result = request_command(&context, "backup", payloadRaw, payloadRawLen);
+    lwm2m_free(payloadRaw);
+
+    /*
+    * Response Data Format (result = COAP_NO_ERROR)
+    * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
+    * 00 ... Message Id associated with Data Type
+    * 45 ... Result Status Code e.g. COAP_205_CONTENT
+    * 00 ... ObjectID LSB
+    * 00 ... ObjectID MSB
+    * 00 ... always 00
+    * 00 ... always 00
+    * 00 ... always 00
+    * 00 ... always 00
+    */
+    uint8_t * response = context.response;
+    if (COAP_NO_ERROR == result && response[0] == 0x02 && messageId == response[1]) {
+      result = response[2];
+    } else {
+      result = COAP_400_BAD_REQUEST;
+    }
+    fprintf(stderr, "backup_object:result=>0x%X\r\n", result);
+    return result;
+}
+
+uint8_t restore_object(uint16_t objectId)
+{
+    uint16_t i = 0;
+    uint8_t messageId = 0x01;
+    uint8_t result;
+    parent_context_t context;
+    size_t payloadRawLen = 8;
+    uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
+    payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
+    payloadRaw[i++] = messageId;                // Message Id associated with Data Type
+    payloadRaw[i++] = objectId & 0xff;          // ObjectID LSB
+    payloadRaw[i++] = objectId >> 8;            // ObjectID MSB
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+    payloadRaw[i++] = 0;                        // always 00
+
+    fprintf(stderr, "restore_object:objectId=>%hu\r\n", objectId);
+    result = request_command(&context, "restore", payloadRaw, payloadRawLen);
+    lwm2m_free(payloadRaw);
+
+    /*
+    * Response Data Format (result = COAP_NO_ERROR)
+    * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
+    * 00 ... Message Id associated with Data Type
+    * 45 ... Result Status Code e.g. COAP_205_CONTENT
+    * 00 ... ObjectID LSB
+    * 00 ... ObjectID MSB
+    * 00 ... always 00
+    * 00 ... always 00
+    * 00 ... always 00
+    * 00 ... always 00
+    */
+    uint8_t * response = context.response;
+    if (COAP_NO_ERROR == result && response[0] == 0x02 && messageId == response[1]) {
+      result = response[2];
+    } else {
+      result = COAP_400_BAD_REQUEST;
+    }
+    fprintf(stderr, "restore_object:result=>0x%X\r\n", result);
+    return result;
 }

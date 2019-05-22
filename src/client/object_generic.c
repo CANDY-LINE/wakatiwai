@@ -716,8 +716,10 @@ lwm2m_object_t * get_object(uint16_t objectId)
     genericObj->discoverFunc = prv_generic_discover;
     genericObj->writeFunc    = prv_generic_write;
     genericObj->executeFunc  = prv_generic_execute;
-    genericObj->createFunc   = prv_generic_create;
-    genericObj->deleteFunc   = prv_generic_delete;
+    if (LWM2M_DEVICE_OBJECT_ID != objectId) {
+        genericObj->createFunc   = prv_generic_create;
+        genericObj->deleteFunc   = prv_generic_delete;
+    }
 
     return genericObj;
 }

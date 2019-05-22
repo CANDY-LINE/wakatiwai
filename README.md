@@ -11,10 +11,10 @@ Server programs are out of Wakatiwai project scope so there are no TODOs for LwM
 
 ## Major differences between Wakaama LwM2M Client and Wakatiwai
 
-- Strip some of predefined C-based LwM2M object impl. except for Security objects and Server objects
+- Strip predefined C-based LwM2M object implementation
 - Redirect all log output to stderr
 - Enable DTLS by default
-- Add new options for providing Server ID and manageable object IDs
+- Add new options for providing manageable object IDs
 
 ## IPC Message Format
 
@@ -48,7 +48,7 @@ And you can get `wakatiwaiclient` executable file under `build` directory.
 
 ## License
 
-Copyright (c) 2017 [CANDY LINE INC.](https://www.candy-line.io)
+Copyright (c) 2019 [CANDY LINE INC.](https://www.candy-line.io)
 
 - [Eclipse Public License v2.0](https://www.eclipse.org/legal/epl-2.0/)
 - [3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause)
@@ -74,6 +74,11 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 ```
 
 ## Revision History
+
+### 2.0.0
+
+- Strip dependencies on Security Object and Server Object
+- Add a new command argument to enable lwm2m message dump
 
 ### 1.3.0
 

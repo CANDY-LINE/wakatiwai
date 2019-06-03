@@ -287,7 +287,7 @@ static char * server_get_uri(lwm2m_object_t * obj, uint16_t instanceId) {
 }
 
 static uint16_t * parse_object_id_csv(const char * objectIdCsv, uint16_t * objCount) {
-    uint16_t count = 0;
+    uint16_t count = 1;
     uint16_t buffIdx = 0;
     uint16_t objectId = 0;
     uint16_t objectIndex = 0;

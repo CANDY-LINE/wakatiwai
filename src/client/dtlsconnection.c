@@ -548,7 +548,7 @@ void connection_free(dtls_connection_t * connList)
         dtls_connection_t * nextP;
 
         nextP = connList->next;
-        free(connList);
+        lwm2m_free(connList);
 
         connList = nextP;
     }

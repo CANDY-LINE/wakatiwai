@@ -75,6 +75,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 2.0.2
+
+- Fix an issue where lwm2m_data_cp() failed to copy a valid string because of the wrong termination character position
+
 ### 2.0.1
 
 - Fix memory leak issues

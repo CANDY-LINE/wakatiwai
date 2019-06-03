@@ -43,24 +43,26 @@ typedef struct
 static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp)
 {
     uint16_t i = 0;
-    uint16_t size = 5 + strlen(cmd) + 1; // without \0
+    uint16_t size = 6 /* "/resp:" */ + strlen(cmd) + 1 /* ":" */;
     // /resp:{command}:{base64 payload}\r\n
     uint8_t * expected = lwm2m_malloc(size);
     uint8_t * ptr = expected;
     strcpy((char *)ptr, "/resp:");
-    ptr += 6; // strlen("/resp:")
+    ptr += 6; //=> strlen("/resp:")
     strcpy((char *)ptr, cmd);
     ptr += strlen(cmd);
     *ptr = ':';
-    while ((i < size) && (*expected == *resp)) {
-        ++expected;
+    ptr = expected;
+    while ((i < size) && (*ptr == *resp)) {
+        ++ptr;
         ++resp;
         ++i;
     }
+    lwm2m_free(expected);
     if (i != size) {
         return NULL;
     }
-    return resp + 1; // next to ':'
+    return resp;
 }
 
 static uint8_t handle_response(parent_context_t * context, char * cmd)
@@ -162,6 +164,7 @@ static void lwm2m_data_cp(lwm2m_data_t * dataP,
     char * buf;
     switch(dataP->type) {
         case LWM2M_TYPE_STRING:
+            data[len - 1] = '\0';
             lwm2m_data_encode_nstring((const char *)data, len, dataP);
             break;
         case LWM2M_TYPE_OPAQUE:
@@ -789,6 +792,7 @@ uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
         }
         lwm2m_resource_value_changed(lwm2mH, &uri);
     }
+    response_free(&context);
     return err;
 }
 
@@ -831,6 +835,7 @@ uint8_t backup_object(uint16_t objectId)
     } else {
       result = COAP_400_BAD_REQUEST;
     }
+    response_free(&context);
     fprintf(stderr, "backup_object:result=>0x%X\r\n", result);
     return result;
 }
@@ -874,6 +879,7 @@ uint8_t restore_object(uint16_t objectId)
     } else {
       result = COAP_400_BAD_REQUEST;
     }
+    response_free(&context);
     fprintf(stderr, "restore_object:result=>0x%X\r\n", result);
     return result;
 }

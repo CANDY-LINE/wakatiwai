@@ -236,7 +236,7 @@ static int send_to_peer(struct dtls_context_t *ctx,
 
     // find connection
     dtls_connection_t * connP = (dtls_connection_t *) ctx->app;
-    dtls_connection_t* cnx = connection_find((dtls_connection_t *) ctx->app, &(session->addr.st),session->size);
+    dtls_connection_t * cnx = connection_find(connP, &(session->addr.st),session->size);
     if (cnx != NULL)
     {
         // send data to peer
@@ -257,7 +257,7 @@ static int read_from_peer(struct dtls_context_t *ctx,
 
     // find connection
     dtls_connection_t * connP = (dtls_connection_t *) ctx->app;
-    dtls_connection_t* cnx = connection_find((dtls_connection_t *) ctx->app, &(session->addr.st),session->size);
+    dtls_connection_t * cnx = connection_find(connP, &(session->addr.st),session->size);
     if (cnx != NULL)
     {
         lwm2m_handle_packet(cnx->lwm2mH, (uint8_t*)data, len, (void*)cnx);
@@ -405,7 +405,7 @@ dtls_connection_t * connection_new_incoming(dtls_connection_t * connList,
 {
     dtls_connection_t * connP;
 
-    connP = (dtls_connection_t *)malloc(sizeof(dtls_connection_t));
+    connP = (dtls_connection_t *)lwm2m_malloc(sizeof(dtls_connection_t));
     if (connP != NULL)
     {
         memset(connP, 0, sizeof(dtls_connection_t));
@@ -414,7 +414,7 @@ dtls_connection_t * connection_new_incoming(dtls_connection_t * connList,
         connP->addrLen = addrLen;
         connP->next = connList;
 
-        connP->dtlsSession = (session_t *)malloc(sizeof(session_t));
+        connP->dtlsSession = (session_t *)lwm2m_malloc(sizeof(session_t));
         memset(connP->dtlsSession, 0, sizeof(session_t));
         connP->dtlsSession->addr.sin6 = connP->addr;
         connP->dtlsSession->size = connP->addrLen;
@@ -534,7 +534,7 @@ dtls_connection_t * connection_create(dtls_connection_t * connList,
         }
     }
 
-    if (NULL != servinfo) free(servinfo);
+    if (NULL != servinfo) freeaddrinfo(servinfo);
 
     return connP;
 }
@@ -548,7 +548,7 @@ void connection_free(dtls_connection_t * connList)
         dtls_connection_t * nextP;
 
         nextP = connList->next;
-        free(connList);
+        lwm2m_free(connList);
 
         connList = nextP;
     }

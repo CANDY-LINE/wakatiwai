@@ -227,43 +227,7 @@ void lwm2m_close_connection(void * sessionH,
     }
 }
 
-static void prv_update(char * buffer,
-                       void * user_data)
-{
-    lwm2m_context_t * lwm2mH = (lwm2m_context_t *)user_data;
-    if (buffer[0] == 0) goto syntax_error;
-
-    uint16_t serverId = (uint16_t) atoi(buffer);
-    int res = lwm2m_update_registration(lwm2mH, serverId, false);
-    if (res != 0)
-    {
-        fprintf(stderr, "Registration update error: ");
-        print_status(stderr, res);
-        fprintf(stderr, "\r\n");
-    }
-    return;
-
-syntax_error:
-    fprintf(stderr, "Syntax error !\n");
-}
-
 #ifdef LWM2M_BOOTSTRAP
-
-static void prv_initiate_bootstrap(char * buffer,
-                                   void * user_data)
-{
-    lwm2m_context_t * lwm2mH = (lwm2m_context_t *)user_data;
-    lwm2m_server_t * targetP;
-
-    // HACK !!!
-    lwm2mH->state = STATE_BOOTSTRAP_REQUIRED;
-    targetP = lwm2mH->bootstrapServerList;
-    while (targetP != NULL)
-    {
-        targetP->lifetime = 0;
-        targetP = targetP->next;
-    }
-}
 
 static void update_bootstrap_info(lwm2m_client_state_t * previousBootstrapState,
         lwm2m_context_t * context)
@@ -323,7 +287,7 @@ static char * server_get_uri(lwm2m_object_t * obj, uint16_t instanceId) {
 }
 
 static uint16_t * parse_object_id_csv(const char * objectIdCsv, uint16_t * objCount) {
-    uint16_t count = 0;
+    uint16_t count = 1;
     uint16_t buffIdx = 0;
     uint16_t objectId = 0;
     uint16_t objectIndex = 0;

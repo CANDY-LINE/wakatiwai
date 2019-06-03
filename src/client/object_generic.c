@@ -43,24 +43,26 @@ typedef struct
 static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp)
 {
     uint16_t i = 0;
-    uint16_t size = 5 + strlen(cmd) + 1; // without \0
+    uint16_t size = 6 /* "/resp:" */ + strlen(cmd) + 1 /* ":" */;
     // /resp:{command}:{base64 payload}\r\n
     uint8_t * expected = lwm2m_malloc(size);
     uint8_t * ptr = expected;
     strcpy((char *)ptr, "/resp:");
-    ptr += 6; // strlen("/resp:")
+    ptr += 6; //=> strlen("/resp:")
     strcpy((char *)ptr, cmd);
     ptr += strlen(cmd);
     *ptr = ':';
-    while ((i < size) && (*expected == *resp)) {
-        ++expected;
+    ptr = expected;
+    while ((i < size) && (*ptr == *resp)) {
+        ++ptr;
         ++resp;
         ++i;
     }
+    lwm2m_free(expected);
     if (i != size) {
         return NULL;
     }
-    return resp + 1; // next to ':'
+    return resp;
 }
 
 static uint8_t handle_response(parent_context_t * context, char * cmd)

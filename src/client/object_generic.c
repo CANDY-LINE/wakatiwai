@@ -792,6 +792,7 @@ uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
         }
         lwm2m_resource_value_changed(lwm2mH, &uri);
     }
+    response_free(&context);
     return err;
 }
 
@@ -834,6 +835,7 @@ uint8_t backup_object(uint16_t objectId)
     } else {
       result = COAP_400_BAD_REQUEST;
     }
+    response_free(&context);
     fprintf(stderr, "backup_object:result=>0x%X\r\n", result);
     return result;
 }
@@ -877,6 +879,7 @@ uint8_t restore_object(uint16_t objectId)
     } else {
       result = COAP_400_BAD_REQUEST;
     }
+    response_free(&context);
     fprintf(stderr, "restore_object:result=>0x%X\r\n", result);
     return result;
 }

@@ -75,6 +75,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 2.0.1
+
+- Fix memory leak issues
+
 ### 2.0.0
 
 - Strip dependencies on Security Object and Server Object

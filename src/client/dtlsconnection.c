@@ -405,7 +405,7 @@ dtls_connection_t * connection_new_incoming(dtls_connection_t * connList,
 {
     dtls_connection_t * connP;
 
-    connP = (dtls_connection_t *)malloc(sizeof(dtls_connection_t));
+    connP = (dtls_connection_t *)lwm2m_malloc(sizeof(dtls_connection_t));
     if (connP != NULL)
     {
         memset(connP, 0, sizeof(dtls_connection_t));
@@ -414,7 +414,7 @@ dtls_connection_t * connection_new_incoming(dtls_connection_t * connList,
         connP->addrLen = addrLen;
         connP->next = connList;
 
-        connP->dtlsSession = (session_t *)malloc(sizeof(session_t));
+        connP->dtlsSession = (session_t *)lwm2m_malloc(sizeof(session_t));
         memset(connP->dtlsSession, 0, sizeof(session_t));
         connP->dtlsSession->addr.sin6 = connP->addr;
         connP->dtlsSession->size = connP->addrLen;

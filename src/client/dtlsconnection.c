@@ -534,7 +534,7 @@ dtls_connection_t * connection_create(dtls_connection_t * connList,
         }
     }
 
-    if (NULL != servinfo) free(servinfo);
+    if (NULL != servinfo) freeaddrinfo(servinfo);
 
     return connP;
 }

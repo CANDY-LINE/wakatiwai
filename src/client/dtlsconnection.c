@@ -236,7 +236,7 @@ static int send_to_peer(struct dtls_context_t *ctx,
 
     // find connection
     dtls_connection_t * connP = (dtls_connection_t *) ctx->app;
-    dtls_connection_t* cnx = connection_find((dtls_connection_t *) ctx->app, &(session->addr.st),session->size);
+    dtls_connection_t * cnx = connection_find(connP, &(session->addr.st),session->size);
     if (cnx != NULL)
     {
         // send data to peer
@@ -257,7 +257,7 @@ static int read_from_peer(struct dtls_context_t *ctx,
 
     // find connection
     dtls_connection_t * connP = (dtls_connection_t *) ctx->app;
-    dtls_connection_t* cnx = connection_find((dtls_connection_t *) ctx->app, &(session->addr.st),session->size);
+    dtls_connection_t * cnx = connection_find(connP, &(session->addr.st),session->size);
     if (cnx != NULL)
     {
         lwm2m_handle_packet(cnx->lwm2mH, (uint8_t*)data, len, (void*)cnx);

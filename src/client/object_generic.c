@@ -808,6 +808,14 @@ lwm2m_object_t * get_object(uint16_t objectId)
         return NULL;
     }
 
+    // Prepare a list of instance IDs
+    uint8_t result = setup_instance_ids(genericObj);
+    if (result != COAP_NO_ERROR)
+    {
+        free_object(genericObj);
+        return NULL;
+    }
+
     genericObj->readFunc     = prv_generic_read;
     genericObj->discoverFunc = prv_generic_discover;
     genericObj->writeFunc    = prv_generic_write;

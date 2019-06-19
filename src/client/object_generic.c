@@ -822,18 +822,6 @@ lwm2m_object_t * get_object(uint16_t objectId)
         return NULL;
     }
 
-    // Setup Instances
-    genericObj->instanceList = (lwm2m_list_t *)lwm2m_malloc(sizeof(lwm2m_list_t));
-    if (NULL != genericObj->instanceList)
-    {
-        memset(genericObj->instanceList, 0, sizeof(lwm2m_list_t));
-    }
-    else
-    {
-        free_object(genericObj);
-        return NULL;
-    }
-
     // Prepare a list of instance IDs
     uint8_t result = setup_instance_ids(genericObj);
     if (result != COAP_NO_ERROR)

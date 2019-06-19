@@ -703,7 +703,7 @@ static uint8_t prv_generic_create(uint16_t instanceId,
     lwm2m_write_payload(&i, payloadRaw, numData, dataArray);
 
     fprintf(stderr, "prv_generic_create:objectId=>%hu, instanceId=>%hu, numData=>%d\r\n",
-    context->objectId, instanceId, numData);
+        context->objectId, instanceId, numData);
     result = request_command(context, "create", payloadRaw, payloadRawLen);
     lwm2m_free(payloadRaw);
 

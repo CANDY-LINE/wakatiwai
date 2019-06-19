@@ -158,7 +158,7 @@ static parent_context_t * setup_parent_context(uint16_t objectId)
 
 static void response_free(parent_context_t * context)
 {
-    if (context->response) {
+    if (NULL != context->response) {
         lwm2m_free(context->response);
         context->response = NULL;
     }

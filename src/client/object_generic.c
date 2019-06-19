@@ -164,7 +164,6 @@ static void lwm2m_data_cp(lwm2m_data_t * dataP,
     char * buf;
     switch(dataP->type) {
         case LWM2M_TYPE_STRING:
-            data[len] = '\0';
             lwm2m_data_encode_nstring((const char *)data, len, dataP);
             break;
         case LWM2M_TYPE_OPAQUE:

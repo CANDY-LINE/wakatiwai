@@ -795,8 +795,9 @@ uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
     return err;
 }
 
-uint8_t backup_object(uint16_t objectId)
+uint8_t backup_object(lwm2m_object_t * objectP)
 {
+    uint16_t objectId = objectP->objID;
     uint16_t i = 0;
     uint8_t messageId = 0x01;
     uint8_t result;
@@ -839,8 +840,9 @@ uint8_t backup_object(uint16_t objectId)
     return result;
 }
 
-uint8_t restore_object(uint16_t objectId)
+uint8_t restore_object(lwm2m_object_t * objectP)
 {
+    uint16_t objectId = objectP->objID;
     uint16_t i = 0;
     uint8_t messageId = 0x01;
     uint8_t result;

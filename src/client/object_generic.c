@@ -725,6 +725,21 @@ static uint8_t prv_generic_create(uint16_t instanceId,
       result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
+
+    // Add a new instance ID to the existing instance ID list
+    generic_obj_instance_t * targetP;
+    targetP = (generic_obj_instance_t *)lwm2m_malloc(sizeof(generic_obj_instance_t));
+    if (NULL == targetP)
+    {
+        result = COAP_500_INTERNAL_SERVER_ERROR;
+    }
+    else
+    {
+        memset(targetP, 0, sizeof(generic_obj_instance_t));
+        targetP->objInstId    = instanceId;
+        objectP->instanceList = LWM2M_LIST_ADD(objectP->instanceList, targetP);
+    }
+
     fprintf(stderr, "prv_generic_create:result=>0x%X\r\n", result);
     return result;
 }

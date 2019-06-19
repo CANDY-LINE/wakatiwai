@@ -984,5 +984,12 @@ uint8_t restore_object(lwm2m_object_t * objectP)
     }
     response_free(&context);
     fprintf(stderr, "restore_object:result=>0x%X\r\n", result);
+
+    // Remove all the entries
+    if (NULL != objectP->instanceList) {
+        lwm2m_list_free(objectP->instanceList);
+    }
+    // Read an Object in order to get a list of instance IDs
+    result = setup_instance_ids(objectP);
     return result;
 }

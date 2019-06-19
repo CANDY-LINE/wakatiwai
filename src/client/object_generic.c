@@ -40,6 +40,13 @@ typedef struct
     size_t responseLen;
 } parent_context_t;
 
+typedef struct generic_obj_instance
+{   //linked list:
+    struct generic_obj_instance*   next;       // matches lwm2m_list_t::next
+    uint16_t                       objInstId;  // matches lwm2m_list_t::id
+} generic_obj_instance_t;
+
+
 static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp)
 {
     uint16_t i = 0;
@@ -213,6 +220,93 @@ static void lwm2m_data_cp(lwm2m_data_t * dataP,
         default:
             break;
     }
+}
+
+static uint8_t prv_generic_read_instances(
+                                int * numDataP,
+                                uint16_t ** instaceIdArrayP,
+                                lwm2m_object_t * objectP)
+{
+    uint16_t i = 0;
+    uint8_t messageId = 0x10;
+    uint8_t result;
+    parent_context_t * context = (parent_context_t *)objectP->userData;
+    size_t payloadRawLen = 8;
+    uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
+    memset(payloadRaw, 0, payloadRawLen);
+    payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
+    payloadRaw[i++] = messageId;                // Message Id associated with Data Type
+    payloadRaw[i++] = context->objectId & 0xff; // ObjectID LSB
+    payloadRaw[i++] = context->objectId >> 8;   // ObjectID MSB
+
+    fprintf(stderr, "prv_generic_read_instances:objectId=>%hu\r\n", context->objectId);
+
+    result = request_command(context, "readInstances", payloadRaw, payloadRawLen);
+    lwm2m_free(payloadRaw);
+
+    /*
+     * Response Data Format (result = COAP_NO_ERROR)
+     * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
+     * 00 ... Message Id associated with Data Type
+     * 45 ... Result Status Code e.g. COAP_205_CONTENT
+     * 00 ... ObjectID LSB
+     * 00 ... ObjectID MSB
+     * 00 ... # of instances LSB
+     * 00 ... # of instances MSB
+     * 00 ... InstanceId LSB  <============= First InstanceId LSB (index:7)
+     * 00 ... InstanceId MSB
+     * 00 ... InstanceId LSB  <============= Second InstanceId LSB
+     * 00 ... InstanceId MSB
+     * ..
+     */
+    uint16_t idx = 7; // First InstanceId LSB index
+    uint8_t * response = context->response;
+    if (COAP_NO_ERROR == result && response[0] == 0x02 && messageId == response[1]) {
+        result = response[2];
+        *numDataP = response[5] + (((uint16_t)response[6]) << 8);
+        *instaceIdArrayP = lwm2m_malloc(*numDataP * sizeof(uint16_t));
+        if (*instaceIdArrayP == NULL) return COAP_500_INTERNAL_SERVER_ERROR;
+        fprintf(stderr, "prv_generic_read_instances:(lwm2m_data_new):numData=>%d\r\n",
+            *numDataP);
+        for (i = 0; i < *numDataP; i++)
+        {
+            (*instaceIdArrayP)[i] = response[idx++];
+            (*instaceIdArrayP)[i] += (((uint16_t)response[idx++]) << 8);
+        }
+    } else {
+        result = COAP_400_BAD_REQUEST;
+    }
+    response_free(context);
+    fprintf(stderr, "prv_generic_read_instances:result=>0x%X\r\n", result);
+    return result;
+}
+
+static uint8_t setup_instance_ids(lwm2m_object_t * objectP)
+{
+    int size = 0;
+    uint16_t * instanceIdArray = NULL;
+    uint8_t result = prv_generic_read_instances(&size, &instanceIdArray, objectP);
+    if (result != COAP_205_CONTENT)
+    {
+        return result;
+    }
+    result = COAP_NO_ERROR;
+    int i;
+    generic_obj_instance_t * targetP;
+    for (i = 0; i < size; i++) {
+        targetP = (generic_obj_instance_t *)lwm2m_malloc(sizeof(generic_obj_instance_t));
+        if (NULL == targetP)
+        {
+            result = COAP_500_INTERNAL_SERVER_ERROR;
+            break;
+        }
+        memset(targetP, 0, sizeof(generic_obj_instance_t));
+
+        targetP->objInstId    = *instanceIdArray;
+        objectP->instanceList = LWM2M_LIST_ADD(objectP->instanceList, targetP);
+        ++instanceIdArray;
+    }
+    return result;
 }
 
 static uint8_t prv_generic_read(uint16_t instanceId,

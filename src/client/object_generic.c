@@ -286,12 +286,17 @@ static uint8_t setup_instance_ids(lwm2m_object_t * objectP)
 {
     int size = 0;
     uint16_t * instanceIdArray = NULL;
+    uint16_t * instanceIdArrayBackup = NULL;
     uint8_t result = prv_generic_read_instances(&size, &instanceIdArray, objectP);
     if (result != COAP_205_CONTENT)
     {
+        if (NULL != *instanceIdArray) {
+            lwm2m_free(instanceIdArray);
+        }
         return result;
     }
     result = COAP_NO_ERROR;
+    instanceIdArrayBackup = instanceIdArray;
     int i;
     generic_obj_instance_t * targetP;
     for (i = 0; i < size; i++) {
@@ -306,7 +311,10 @@ static uint8_t setup_instance_ids(lwm2m_object_t * objectP)
         targetP->objInstId    = *instanceIdArray;
         objectP->instanceList = LWM2M_LIST_ADD(objectP->instanceList, targetP);
         ++instanceIdArray;
+        fprintf(stderr, "setup_instance_ids:objectId=>%d:instanceId=%d (%d/%d)\r\n",
+            objectP->objID, targetP->objInstId, i, size);
     }
+    lwm2m_free(instanceIdArrayBackup);
     return result;
 }
 

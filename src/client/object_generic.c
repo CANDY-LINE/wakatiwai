@@ -151,6 +151,7 @@ static uint8_t request_command(parent_context_t * context,
 static parent_context_t * setup_parent_context(uint16_t objectId)
 {
     parent_context_t * context = (parent_context_t *)lwm2m_malloc(sizeof(parent_context_t));
+    memset(context, 0, sizeof(parent_context_t));
     context->objectId = objectId;
     return context;
 }

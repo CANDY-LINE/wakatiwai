@@ -40,6 +40,13 @@ typedef struct
     size_t responseLen;
 } parent_context_t;
 
+typedef struct generic_obj_instance
+{   //linked list:
+    struct generic_obj_instance*   next;       // matches lwm2m_list_t::next
+    uint16_t                       objInstId;  // matches lwm2m_list_t::id
+} generic_obj_instance_t;
+
+
 static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp)
 {
     uint16_t i = 0;
@@ -144,13 +151,14 @@ static uint8_t request_command(parent_context_t * context,
 static parent_context_t * setup_parent_context(uint16_t objectId)
 {
     parent_context_t * context = (parent_context_t *)lwm2m_malloc(sizeof(parent_context_t));
+    memset(context, 0, sizeof(parent_context_t));
     context->objectId = objectId;
     return context;
 }
 
 static void response_free(parent_context_t * context)
 {
-    if (context->response) {
+    if (NULL != context->response) {
         lwm2m_free(context->response);
         context->response = NULL;
     }
@@ -164,7 +172,6 @@ static void lwm2m_data_cp(lwm2m_data_t * dataP,
     char * buf;
     switch(dataP->type) {
         case LWM2M_TYPE_STRING:
-            data[len] = '\0';
             lwm2m_data_encode_nstring((const char *)data, len, dataP);
             break;
         case LWM2M_TYPE_OPAQUE:
@@ -214,6 +221,101 @@ static void lwm2m_data_cp(lwm2m_data_t * dataP,
         default:
             break;
     }
+}
+
+static uint8_t prv_generic_read_instances(
+                                int * numDataP,
+                                uint16_t ** instaceIdArrayP,
+                                lwm2m_object_t * objectP)
+{
+    uint16_t i = 0;
+    uint8_t messageId = 0x10;
+    uint8_t result;
+    parent_context_t * context = (parent_context_t *)objectP->userData;
+    size_t payloadRawLen = 8;
+    uint8_t * payloadRaw = lwm2m_malloc(payloadRawLen);
+    memset(payloadRaw, 0, payloadRawLen);
+    payloadRaw[i++] = 0x01;                     // Data Type: 0x01 (Request), 0x02 (Response)
+    payloadRaw[i++] = messageId;                // Message Id associated with Data Type
+    payloadRaw[i++] = context->objectId & 0xff; // ObjectID LSB
+    payloadRaw[i++] = context->objectId >> 8;   // ObjectID MSB
+
+    fprintf(stderr, "prv_generic_read_instances:objectId=>%hu\r\n", context->objectId);
+
+    result = request_command(context, "readInstances", payloadRaw, payloadRawLen);
+    lwm2m_free(payloadRaw);
+
+    /*
+     * Response Data Format (result = COAP_NO_ERROR)
+     * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
+     * 00 ... Message Id associated with Data Type
+     * 45 ... Result Status Code e.g. COAP_205_CONTENT
+     * 00 ... ObjectID LSB
+     * 00 ... ObjectID MSB
+     * 00 ... # of instances LSB
+     * 00 ... # of instances MSB
+     * 00 ... InstanceId LSB  <============= First InstanceId LSB (index:7)
+     * 00 ... InstanceId MSB
+     * 00 ... InstanceId LSB  <============= Second InstanceId LSB
+     * 00 ... InstanceId MSB
+     * ..
+     */
+    uint16_t idx = 7; // First InstanceId LSB index
+    uint8_t * response = context->response;
+    if (COAP_NO_ERROR == result && response[0] == 0x02 && messageId == response[1]) {
+        result = response[2];
+        *numDataP = response[5] + (((uint16_t)response[6]) << 8);
+        *instaceIdArrayP = lwm2m_malloc(*numDataP * sizeof(uint16_t));
+        if (*instaceIdArrayP == NULL) return COAP_500_INTERNAL_SERVER_ERROR;
+        fprintf(stderr, "prv_generic_read_instances:(lwm2m_data_new):numData=>%d\r\n",
+            *numDataP);
+        for (i = 0; i < *numDataP; i++)
+        {
+            (*instaceIdArrayP)[i] = response[idx++];
+            (*instaceIdArrayP)[i] += (((uint16_t)response[idx++]) << 8);
+        }
+    } else {
+        result = COAP_400_BAD_REQUEST;
+    }
+    response_free(context);
+    fprintf(stderr, "prv_generic_read_instances:result=>0x%X\r\n", result);
+    return result;
+}
+
+static uint8_t setup_instance_ids(lwm2m_object_t * objectP)
+{
+    int size = 0;
+    uint16_t * instanceIdArray = NULL;
+    uint16_t * instanceIdArrayBackup = NULL;
+    uint8_t result = prv_generic_read_instances(&size, &instanceIdArray, objectP);
+    if (result != COAP_205_CONTENT)
+    {
+        if (NULL != *instanceIdArray) {
+            lwm2m_free(instanceIdArray);
+        }
+        return result;
+    }
+    result = COAP_NO_ERROR;
+    instanceIdArrayBackup = instanceIdArray;
+    int i;
+    generic_obj_instance_t * targetP;
+    for (i = 0; i < size; i++) {
+        targetP = (generic_obj_instance_t *)lwm2m_malloc(sizeof(generic_obj_instance_t));
+        if (NULL == targetP)
+        {
+            result = COAP_500_INTERNAL_SERVER_ERROR;
+            break;
+        }
+        memset(targetP, 0, sizeof(generic_obj_instance_t));
+
+        targetP->objInstId    = *instanceIdArray;
+        objectP->instanceList = LWM2M_LIST_ADD(objectP->instanceList, targetP);
+        ++instanceIdArray;
+        fprintf(stderr, "setup_instance_ids:objectId=>%d:instanceId=%d (%d/%d)\r\n",
+            objectP->objID, targetP->objInstId, i, size);
+    }
+    lwm2m_free(instanceIdArrayBackup);
+    return result;
 }
 
 static uint8_t prv_generic_read(uint16_t instanceId,
@@ -609,7 +711,7 @@ static uint8_t prv_generic_create(uint16_t instanceId,
     lwm2m_write_payload(&i, payloadRaw, numData, dataArray);
 
     fprintf(stderr, "prv_generic_create:objectId=>%hu, instanceId=>%hu, numData=>%d\r\n",
-    context->objectId, instanceId, numData);
+        context->objectId, instanceId, numData);
     result = request_command(context, "create", payloadRaw, payloadRawLen);
     lwm2m_free(payloadRaw);
 
@@ -632,6 +734,21 @@ static uint8_t prv_generic_create(uint16_t instanceId,
       result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
+
+    // Add a new instance ID to the existing instance ID list
+    generic_obj_instance_t * targetP;
+    targetP = (generic_obj_instance_t *)lwm2m_malloc(sizeof(generic_obj_instance_t));
+    if (NULL == targetP)
+    {
+        result = COAP_500_INTERNAL_SERVER_ERROR;
+    }
+    else
+    {
+        memset(targetP, 0, sizeof(generic_obj_instance_t));
+        targetP->objInstId    = instanceId;
+        objectP->instanceList = LWM2M_LIST_ADD(objectP->instanceList, targetP);
+    }
+
     fprintf(stderr, "prv_generic_create:result=>0x%X\r\n", result);
     return result;
 }
@@ -678,6 +795,16 @@ static uint8_t prv_generic_delete(uint16_t instanceId,
         result = COAP_400_BAD_REQUEST;
     }
     response_free(context);
+
+    // Delete an instance ID from the list
+    generic_obj_instance_t* targetP;
+    objectP->instanceList = lwm2m_list_remove(objectP->instanceList, instanceId,
+                                             (lwm2m_list_t**)&targetP);
+    if (NULL != targetP)
+    {
+        lwm2m_free(targetP);
+    }
+
     fprintf(stderr, "prv_generic_delete:result=>0x%X\r\n", result);
     return result;
 }
@@ -703,13 +830,9 @@ lwm2m_object_t * get_object(uint16_t objectId)
         return NULL;
     }
 
-    // Setup Instances
-    genericObj->instanceList = (lwm2m_list_t *)lwm2m_malloc(sizeof(lwm2m_list_t));
-    if (NULL != genericObj->instanceList)
-    {
-        memset(genericObj->instanceList, 0, sizeof(lwm2m_list_t));
-    }
-    else
+    // Prepare a list of instance IDs
+    uint8_t result = setup_instance_ids(genericObj);
+    if (result != COAP_NO_ERROR)
     {
         free_object(genericObj);
         return NULL;
@@ -796,8 +919,9 @@ uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
     return err;
 }
 
-uint8_t backup_object(uint16_t objectId)
+uint8_t backup_object(lwm2m_object_t * objectP)
 {
+    uint16_t objectId = objectP->objID;
     uint16_t i = 0;
     uint8_t messageId = 0x01;
     uint8_t result;
@@ -840,8 +964,9 @@ uint8_t backup_object(uint16_t objectId)
     return result;
 }
 
-uint8_t restore_object(uint16_t objectId)
+uint8_t restore_object(lwm2m_object_t * objectP)
 {
+    uint16_t objectId = objectP->objID;
     uint16_t i = 0;
     uint8_t messageId = 0x01;
     uint8_t result;
@@ -881,5 +1006,12 @@ uint8_t restore_object(uint16_t objectId)
     }
     response_free(&context);
     fprintf(stderr, "restore_object:result=>0x%X\r\n", result);
+
+    // Remove all the entries
+    if (NULL != objectP->instanceList) {
+        lwm2m_list_free(objectP->instanceList);
+    }
+    // Read an Object in order to get a list of instance IDs
+    result = setup_instance_ids(objectP);
     return result;
 }

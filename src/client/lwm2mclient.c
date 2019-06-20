@@ -241,8 +241,11 @@ static void update_bootstrap_info(lwm2m_client_state_t * previousBootstrapState,
 #ifdef WITH_LOGS
                 fprintf(stderr, "[BOOTSTRAP] backup security and server objects\r\n");
 #endif
-                backup_object(LWM2M_SECURITY_OBJECT_ID);
-                backup_object(LWM2M_SERVER_OBJECT_ID);
+                if (*objArray != NULL)
+                {
+                    backup_object(objArray[0]); // LWM2M_SECURITY_OBJECT_ID
+                    backup_object(objArray[1]); // LWM2M_SERVER_OBJECT_ID
+                }
                 break;
             default:
                 break;
@@ -595,8 +598,8 @@ int main(int argc, char *argv[])
 #ifdef WITH_LOGS
                 fprintf(stderr, "[BOOTSTRAP] restore security and server objects\r\n");
 #endif
-                restore_object(LWM2M_SECURITY_OBJECT_ID);
-                restore_object(LWM2M_SERVER_OBJECT_ID);
+                restore_object(objArray[0]); // LWM2M_SECURITY_OBJECT_ID
+                restore_object(objArray[1]); // LWM2M_SERVER_OBJECT_ID
                 lwm2mH->state = STATE_INITIAL;
             }
             else return -1;

@@ -37,7 +37,7 @@ char * security_get_uri(lwm2m_object_t * obj, int instanceId, char * uriBuffer, 
 
     obj->readFunc(instanceId, &size, &dataP, obj);
     if (dataP != NULL &&
-            dataP->type == LWM2M_TYPE_STRING &&
+            (dataP->type == LWM2M_TYPE_STRING || dataP->type == LWM2M_TYPE_OPAQUE) &&
             dataP->value.asBuffer.length > 0)
     {
         if (bufferSize > dataP->value.asBuffer.length){

@@ -75,6 +75,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 2.0.4
+
+- Accept OPAQUE value as well as STRING for the server URI as the both types can represent it
+
 ### 2.0.3
 
 - Fix an issue where wakatiwai client failed to handle 2 or more object instances

@@ -276,7 +276,7 @@ static char * server_get_uri(lwm2m_object_t * obj, uint16_t instanceId) {
 
     obj->readFunc(instanceId, &size, &dataP, obj);
     if (dataP != NULL &&
-            dataP->type == LWM2M_TYPE_STRING &&
+            (dataP->type == LWM2M_TYPE_STRING || dataP->type == LWM2M_TYPE_OPAQUE) &&
             dataP->value.asBuffer.length > 0) {
         uriBuffer = lwm2m_malloc(dataP->value.asBuffer.length + 1);
         memset(uriBuffer, 0, dataP->value.asBuffer.length + 1);

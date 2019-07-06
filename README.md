@@ -75,6 +75,11 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 2.0.5
+
+- Fix an issue where Create command was always add a new instance even after failing to malloc
+- Fix an issue where Delete command deleted an instance even after receiving error status code
+
 ### 2.0.4
 
 - Accept OPAQUE value as well as STRING for the server URI as the both types can represent it

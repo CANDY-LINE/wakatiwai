@@ -798,13 +798,15 @@ static uint8_t prv_generic_delete(uint16_t instanceId,
     }
     response_free(context);
 
-    // Delete an instance ID from the list
-    generic_obj_instance_t* targetP;
-    objectP->instanceList = lwm2m_list_remove(objectP->instanceList, instanceId,
-                                             (lwm2m_list_t**)&targetP);
-    if (NULL != targetP)
-    {
-        lwm2m_free(targetP);
+    if (result == COAP_202_DELETED) {
+      // Delete an instance ID from the list
+      generic_obj_instance_t* targetP;
+      objectP->instanceList = lwm2m_list_remove(objectP->instanceList, instanceId,
+                                               (lwm2m_list_t**)&targetP);
+      if (NULL != targetP)
+      {
+          lwm2m_free(targetP);
+      }
     }
 
     fprintf(stderr, "prv_generic_delete:result=>0x%X\r\n", result);

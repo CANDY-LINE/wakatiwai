@@ -719,7 +719,7 @@ static uint8_t prv_generic_create(uint16_t instanceId,
     * Response Data Format (result = COAP_NO_ERROR)
     * 02 ... Data Type: 0x01 (Request), 0x02 (Response)
     * 00 ... Message Id associated with Data Type
-    * 45 ... Result Status Code e.g. COAP_205_CONTENT
+    * 45 ... Result Status Code e.g. COAP_201_CREATED
     * 00 ... ObjectID LSB
     * 00 ... ObjectID MSB
     * 00 ... InstanceId LSB
@@ -735,18 +735,20 @@ static uint8_t prv_generic_create(uint16_t instanceId,
     }
     response_free(context);
 
-    // Add a new instance ID to the existing instance ID list
-    generic_obj_instance_t * targetP;
-    targetP = (generic_obj_instance_t *)lwm2m_malloc(sizeof(generic_obj_instance_t));
-    if (NULL == targetP)
-    {
-        result = COAP_500_INTERNAL_SERVER_ERROR;
-    }
-    else
-    {
-        memset(targetP, 0, sizeof(generic_obj_instance_t));
-        targetP->objInstId    = instanceId;
-        objectP->instanceList = LWM2M_LIST_ADD(objectP->instanceList, targetP);
+    if (result == COAP_201_CREATED) {
+        // Add a new instance ID to the existing instance ID list
+        generic_obj_instance_t * targetP;
+        targetP = (generic_obj_instance_t *)lwm2m_malloc(sizeof(generic_obj_instance_t));
+        if (NULL == targetP)
+        {
+            result = COAP_500_INTERNAL_SERVER_ERROR;
+        }
+        else
+        {
+            memset(targetP, 0, sizeof(generic_obj_instance_t));
+            targetP->objInstId    = instanceId;
+            objectP->instanceList = LWM2M_LIST_ADD(objectP->instanceList, targetP);
+        }
     }
 
     fprintf(stderr, "prv_generic_create:result=>0x%X\r\n", result);
@@ -796,13 +798,15 @@ static uint8_t prv_generic_delete(uint16_t instanceId,
     }
     response_free(context);
 
-    // Delete an instance ID from the list
-    generic_obj_instance_t* targetP;
-    objectP->instanceList = lwm2m_list_remove(objectP->instanceList, instanceId,
-                                             (lwm2m_list_t**)&targetP);
-    if (NULL != targetP)
-    {
-        lwm2m_free(targetP);
+    if (result == COAP_202_DELETED) {
+      // Delete an instance ID from the list
+      generic_obj_instance_t* targetP;
+      objectP->instanceList = lwm2m_list_remove(objectP->instanceList, instanceId,
+                                               (lwm2m_list_t**)&targetP);
+      if (NULL != targetP)
+      {
+          lwm2m_free(targetP);
+      }
     }
 
     fprintf(stderr, "prv_generic_delete:result=>0x%X\r\n", result);

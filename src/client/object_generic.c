@@ -1014,6 +1014,7 @@ uint8_t restore_object(lwm2m_object_t * objectP)
     // Remove all the entries
     if (NULL != objectP->instanceList) {
         lwm2m_list_free(objectP->instanceList);
+        objectP->instanceList = NULL;
     }
     // Read an Object in order to get a list of instance IDs
     result = setup_instance_ids(objectP);

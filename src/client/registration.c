@@ -328,18 +328,119 @@ static void prv_handleRegistrationUpdateReply(lwm2m_transaction_t * transacP,
     }
 }
 
+static int prv_getLifetimeQueryLength(lwm2m_context_t * contextP,
+                                          lwm2m_server_t * server)
+{
+    int index;
+    int res;
+    char buffer[21];
+
+    index = strlen(QUERY_STARTER QUERY_LIFETIME);
+    res = utils_intToText(server->lifetime, (uint8_t *) buffer, sizeof(buffer));
+    if (res == 0) return 0;
+    index += res;
+
+    return index + 1;
+}
+
+static int prv_getLifetimeQuery(lwm2m_context_t * contextP,
+                                    lwm2m_server_t * server,
+                                    char * buffer,
+                                    size_t length)
+{
+    int index = 0;
+    int res = 0;
+
+    res = utils_stringCopy(buffer + index, length - index, QUERY_STARTER QUERY_LIFETIME);
+    if (res < 0) return 0;
+    index += res;
+    res = utils_intToText(server->lifetime, (uint8_t *) (buffer + index), length - index);
+    if (res == 0) return 0;
+    index += res;
+
+    if(index < (int)length)
+    {
+        buffer[index++] = '\0';
+    }
+    else
+    {
+        return 0;
+    }
+
+    return index;
+}
+
 static int prv_updateRegistration(lwm2m_context_t * contextP,
                                   lwm2m_server_t * server,
                                   bool withObjects)
 {
+    char * query;
+    int query_length;
     lwm2m_transaction_t * transaction;
     uint8_t * payload = NULL;
     int payload_length;
 
+    lwm2m_uri_t uri;
+    uri.flag = LWM2M_URI_FLAG_OBJECT_ID;
+    uri.objectId = LWM2M_SERVER_OBJECT_ID;
+    int size = 0;
+    lwm2m_data_t * dataP = NULL;
+    uint8_t result = object_readData(contextP, &uri, &size, &dataP);
+    if (result != COAP_205_CONTENT) {
+        LOG("Failed to retrieve the Server Object data.");
+        return COAP_500_INTERNAL_SERVER_ERROR;
+    }
+    int i = 0;
+    bool queryRequired = false;
+    for (; i < size; i++) {
+        if (server->shortID == dataP[i].value.asChildren.array[0 /* Short ID */].value.asInteger) {
+            int64_t lifetime = dataP[i].value.asChildren.array[1 /* Lifetime */].value.asInteger;
+            LOG_ARG("Current Lifetime: %" PRIu64 ", Stored Lifetime: %" PRIu64,
+                server->lifetime, lifetime);
+            if (lifetime != server->lifetime) {
+                LOG("Append Lifetime Query!");
+                server->lifetime = lifetime;
+                queryRequired = true;
+                break;
+            }
+        }
+    }
+    if (size > 0) {
+        lwm2m_data_free(size, dataP);
+    }
+
+    if (queryRequired == true) {
+        query_length = prv_getLifetimeQueryLength(contextP, server);
+        if(query_length == 0)
+        {
+            return COAP_500_INTERNAL_SERVER_ERROR;
+        }
+        query = lwm2m_malloc(query_length);
+        if(!query)
+        {
+            return COAP_500_INTERNAL_SERVER_ERROR;
+        }
+        if(prv_getLifetimeQuery(contextP, server, query, query_length) != query_length)
+        {
+            lwm2m_free(query);
+            return COAP_500_INTERNAL_SERVER_ERROR;
+        }
+    }
+
     transaction = transaction_new(server->sessionH, COAP_POST, NULL, NULL, contextP->nextMID++, 4, NULL);
-    if (transaction == NULL) return COAP_500_INTERNAL_SERVER_ERROR;
+    if (transaction == NULL)
+    {
+        if (queryRequired == true) {
+            lwm2m_free(query);
+        }
+        return COAP_500_INTERNAL_SERVER_ERROR;
+    }
 
     coap_set_header_uri_path(transaction->message, server->location);
+    if (queryRequired == true) {
+        coap_set_header_uri_query(transaction->message, query);
+        lwm2m_free(query);
+    }
 
     if (withObjects == true)
     {

@@ -107,7 +107,7 @@ static int prv_getRegistrationQueryLength(lwm2m_context_t * contextP,
     if (0 != server->lifetime)
     {
         index += strlen(QUERY_DELIMITER QUERY_LIFETIME);
-        res = utils_intToText(server->lifetime, buffer, sizeof(buffer));
+        res = utils_intToText(server->lifetime, (uint8_t *) buffer, sizeof(buffer));
         if (res == 0) return 0;
         index += res;
     }
@@ -170,7 +170,7 @@ static int prv_getRegistrationQuery(lwm2m_context_t * contextP,
         res = utils_stringCopy(buffer + index, length - index, QUERY_DELIMITER QUERY_LIFETIME);
         if (res < 0) return 0;
         index += res;
-        res = utils_intToText(server->lifetime, buffer + index, length - index);
+        res = utils_intToText(server->lifetime, (uint8_t *) (buffer + index), length - index);
         if (res == 0) return 0;
         index += res;
     }

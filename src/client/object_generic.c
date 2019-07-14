@@ -1018,5 +1018,6 @@ uint8_t restore_object(lwm2m_object_t * objectP)
     }
     // Read an Object in order to get a list of instance IDs
     result = setup_instance_ids(objectP);
+    fprintf(stderr, "restore_object:setup_instance_ids:result=>0x%X\r\n", result);
     return result;
 }

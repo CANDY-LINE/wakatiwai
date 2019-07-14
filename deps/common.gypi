@@ -32,7 +32,6 @@
       '<(wakaama_core_dir)/objects.c',
       '<(wakaama_core_dir)/observe.c',
       '<(wakaama_core_dir)/packet.c',
-      '<(wakaama_core_dir)/registration.c',
       '<(wakaama_core_dir)/tlv.c',
       '<(wakaama_core_dir)/transaction.c',
       '<(wakaama_core_dir)/uri.c',

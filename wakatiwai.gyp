@@ -41,6 +41,7 @@
         '<(client_dir)/lwm2mclient.c',
         '<(client_dir)/object_generic.c',
         '<(client_dir)/dtlsconnection.c',  # DTLS Connection
+        '<(client_dir)/registration.c',
       ],
       'cflags_cc': [
         '-Wno-unused-value',

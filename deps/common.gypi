@@ -54,11 +54,13 @@
     'wakaama_server_dir': '<(wakaama_example_dir)/server',
     'wakaama_server_sources': [
       '<(wakaama_server_dir)/lwm2mserver.c',
+      '<(wakaama_core_dir)/registration.c',  # non-customized registration.c
     ],
     'wakaama_bootstrap_server_dir': '<(wakaama_example_dir)/bootstrap_server',
     'wakaama_bootstrap_server_sources': [
       '<(wakaama_bootstrap_server_dir)/bootstrap_info.c',
       '<(wakaama_bootstrap_server_dir)/bootstrap_server.c',
+      '<(wakaama_core_dir)/registration.c',  # non-customized registration.c
     ],
     'wakaama_defines': [
       'LWM2M_LITTLE_ENDIAN=<!(python <(deps_dir)/endianess.py)',

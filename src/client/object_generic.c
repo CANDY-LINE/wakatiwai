@@ -288,7 +288,7 @@ static uint8_t setup_instance_ids(lwm2m_object_t * objectP)
     uint16_t * instanceIdArray = NULL;
     uint16_t * instanceIdArrayBackup = NULL;
     uint8_t result = prv_generic_read_instances(&size, &instanceIdArray, objectP);
-    if (result != COAP_205_CONTENT)
+    if (result != COAP_205_CONTENT && result != COAP_404_NOT_FOUND)
     {
         if (NULL != instanceIdArray) {
             lwm2m_free(instanceIdArray);

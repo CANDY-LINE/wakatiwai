@@ -87,6 +87,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <signal.h>
+#include <inttypes.h>
 
 #define MAX_PACKET_SIZE 1024
 #ifndef WAKATIWAI_VERSION
@@ -560,6 +561,18 @@ int main(int argc, char *argv[])
          */
         result = lwm2m_step(lwm2mH, &(tv.tv_sec));
         if (previousState != lwm2mH->state) {
+
+#ifdef WITH_LOGS
+        lwm2m_server_t * serverList = lwm2mH->serverList;
+        fprintf(stderr, "** ** ** ** ** ** ** ** ** ** ** ** **\r\n");
+        while (serverList != NULL)
+        {
+            fprintf(stderr, "** ** serverList: { shortID: %d, lifetime: %" PRIu64 ", location: %s }\r\n",
+                serverList->shortID, serverList->lifetime, serverList->location);
+            serverList = serverList->next;
+        }
+        fprintf(stderr, "** ** ** ** ** ** ** ** ** ** ** ** **\r\n");
+#endif
             // Issue a command to notify state change
             switch (lwm2mH->state)
             {

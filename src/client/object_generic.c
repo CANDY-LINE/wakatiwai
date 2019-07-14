@@ -867,7 +867,7 @@ void free_object(lwm2m_object_t * objectP)
     }
 }
 
-uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
+uint8_t handle_observe_response(lwm2m_context_t * lwm2mContext)
 {
     uint8_t err = COAP_NO_ERROR;
     parent_context_t context;
@@ -917,7 +917,7 @@ uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
             fprintf(stderr, "handle_observe_response:lwm2m_stringToUri() failed\r\n");
             break;
         }
-        lwm2m_resource_value_changed(lwm2mH, &uri);
+        lwm2m_resource_value_changed(lwm2mContext, &uri);
     }
     response_free(&context);
     return err;

@@ -1,6 +1,6 @@
 {
   'variables': {
-    'version': '2.0.5',
+    'version': '2.1.0',
     'module_path%': 'build',
     'deps_dir': './deps',
     'src_dir': './src',

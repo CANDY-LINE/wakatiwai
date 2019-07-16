@@ -15,6 +15,7 @@ Server programs are out of Wakatiwai project scope so there are no TODOs for LwM
 - Redirect all log output to stderr
 - Enable DTLS by default
 - Add new options for providing manageable object IDs
+- Add the lifetime query on Registration Update request if the lifetime is changed
 
 ## IPC Message Format
 
@@ -74,6 +75,13 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 ```
 
 ## Revision History
+
+### 2.1.0
+
+- Add a new command to send heartbeat
+- Add support for lifetime query on registration update if the lifetime is modified
+- Fix an issue where setup_instance_ids() returned an error when the target object has no instances
+- Fix an issue where setup_instance_ids() tried to add a new element to free'd list
 
 ### 2.0.5
 

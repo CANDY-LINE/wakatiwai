@@ -75,7 +75,7 @@ typedef struct
  */
 lwm2m_object_t * get_object(uint16_t objectId);
 void free_object(lwm2m_object_t * objectP);
-uint8_t handle_observe_response(lwm2m_context_t * lwm2mH);
+uint8_t handle_observe_response(lwm2m_context_t * lwm2mContext);
 uint8_t backup_object(lwm2m_object_t * objectP);
 uint8_t restore_object(lwm2m_object_t * objectP);
 

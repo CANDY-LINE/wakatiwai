@@ -288,9 +288,9 @@ static uint8_t setup_instance_ids(lwm2m_object_t * objectP)
     uint16_t * instanceIdArray = NULL;
     uint16_t * instanceIdArrayBackup = NULL;
     uint8_t result = prv_generic_read_instances(&size, &instanceIdArray, objectP);
-    if (result != COAP_205_CONTENT)
+    if (result != COAP_205_CONTENT && result != COAP_404_NOT_FOUND)
     {
-        if (NULL != *instanceIdArray) {
+        if (NULL != instanceIdArray) {
             lwm2m_free(instanceIdArray);
         }
         return result;
@@ -867,7 +867,7 @@ void free_object(lwm2m_object_t * objectP)
     }
 }
 
-uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
+uint8_t handle_observe_response(lwm2m_context_t * lwm2mContext)
 {
     uint8_t err = COAP_NO_ERROR;
     parent_context_t context;
@@ -917,7 +917,7 @@ uint8_t handle_observe_response(lwm2m_context_t * lwm2mH)
             fprintf(stderr, "handle_observe_response:lwm2m_stringToUri() failed\r\n");
             break;
         }
-        lwm2m_resource_value_changed(lwm2mH, &uri);
+        lwm2m_resource_value_changed(lwm2mContext, &uri);
     }
     response_free(&context);
     return err;
@@ -1014,8 +1014,10 @@ uint8_t restore_object(lwm2m_object_t * objectP)
     // Remove all the entries
     if (NULL != objectP->instanceList) {
         lwm2m_list_free(objectP->instanceList);
+        objectP->instanceList = NULL;
     }
     // Read an Object in order to get a list of instance IDs
     result = setup_instance_ids(objectP);
+    fprintf(stderr, "restore_object:setup_instance_ids:result=>0x%X\r\n", result);
     return result;
 }

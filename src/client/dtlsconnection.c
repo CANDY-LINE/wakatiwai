@@ -36,6 +36,7 @@
 #include "dtlsconnection.h"
 #include "commandline.h"
 #include "lwm2mclient.h"
+#include "internals.h"
 
 #define COAP_PORT "5683"
 #define COAPS_PORT "5684"
@@ -250,6 +251,7 @@ static int get_psk_info(struct dtls_context_t *ctx,
 static int send_to_peer(struct dtls_context_t *ctx,
         session_t *session, uint8 *data, size_t len) {
 
+    LOG("send_to_peer callabck");
     // find connection
     dtls_connection_t * connP = (dtls_connection_t *) ctx->app;
     dtls_connection_t * cnx = connection_find(connP, &(session->addr.st),session->size);
@@ -261,10 +263,12 @@ static int send_to_peer(struct dtls_context_t *ctx,
         int res = send_data(cnx,data,len);
         if (res < 0)
         {
+            LOG("Nothing sent! send_data failed!");
             return -1;
         }
         return res;
     }
+    LOG("Nothing sent! cnx is NULL");
     return -1;
 }
 
@@ -593,6 +597,7 @@ int connection_send(dtls_connection_t *connP, uint8_t * buffer, size_t length){
                 return -1;
             }
         }
+        LOG("perform dtls_write");
         if (-1 == dtls_write(connP->dtlsContext, connP->dtlsSession, buffer, length)) {
             return -1;
         }
@@ -650,6 +655,7 @@ uint8_t lwm2m_buffer_send(void * sessionH,
                           void * userdata)
 {
     dtls_connection_t * connP = (dtls_connection_t*) sessionH;
+    LOG_ARG("Entering lwm2m_buffer_send (connP:%p)", connP);
 
     if (connP == NULL)
     {

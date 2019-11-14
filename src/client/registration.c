@@ -275,7 +275,10 @@ static uint8_t prv_register(lwm2m_context_t * contextP,
 
     if (server->sessionH == NULL)
     {
+        LOG_ARG("shortId: %d, Trying to connect server", server->shortID);
         server->sessionH = lwm2m_connect_server(server->secObjInstID, contextP->userData);
+    } else {
+        LOG_ARG("shortId: %d, Skipping to connect server", server->shortID);
     }
 
     if (NULL == server->sessionH)
@@ -285,6 +288,7 @@ static uint8_t prv_register(lwm2m_context_t * contextP,
         return COAP_503_SERVICE_UNAVAILABLE;
     }
 
+    LOG_ARG("shortId: %d, Creating a new transaction", server->shortID);
     transaction = transaction_new(server->sessionH, COAP_POST, NULL, NULL, contextP->nextMID++, 4, NULL);
     if (transaction == NULL)
     {
@@ -312,6 +316,7 @@ static uint8_t prv_register(lwm2m_context_t * contextP,
     lwm2m_free(payload);
     lwm2m_free(query);
     server->status = STATE_REG_PENDING;
+    LOG_ARG("shortId: %d, Registration is pending", server->shortID);
 
     return COAP_NO_ERROR;
 }
@@ -625,7 +630,7 @@ lwm2m_status_t registration_getStatus(lwm2m_context_t * contextP)
 
     while (targetP != NULL)
     {
-        LOG_ARG("targetP->status: %s", STR_STATUS(targetP->status));
+        LOG_ARG("shortID: %d, targetP->status: %s", targetP->shortID, STR_STATUS(targetP->status));
         switch (targetP->status)
         {
             case STATE_REGISTERED:

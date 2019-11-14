@@ -539,6 +539,13 @@ dtls_connection_t * connection_create(dtls_connection_t * connList,
                      != LWM2M_SECURITY_MODE_NONE)
             {
                 connP->dtlsContext = get_dtls_context(connP);
+                // Ensure peer is refreshed
+                dtls_peer_t * peer = dtls_get_peer(connP->dtlsContext, connP->dtlsSession);
+                if (peer != NULL)
+                {
+                    peer->state =  DTLS_STATE_CLOSED;
+                    dtls_reset_peer(connP->dtlsContext, peer);
+                }
             }
             else
             {

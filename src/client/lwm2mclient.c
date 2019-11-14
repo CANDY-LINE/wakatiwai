@@ -72,6 +72,7 @@
 
 #include "lwm2mclient.h"
 #include "commandline.h"
+#include "internals.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -188,6 +189,7 @@ exit:
 void lwm2m_close_connection(void * sessionH,
                             void * userData)
 {
+    LOG("Entering");
     client_data_t * app_data;
 #ifdef WITH_TINYDTLS
     dtls_connection_t * targetP;
@@ -206,6 +208,7 @@ void lwm2m_close_connection(void * sessionH,
     {
         app_data->connList = targetP->next;
         lwm2m_free(targetP);
+        LOG_ARG("1) connP(%p) freed", targetP);
     }
     else
     {
@@ -224,6 +227,7 @@ void lwm2m_close_connection(void * sessionH,
         {
             parentP->next = targetP->next;
             lwm2m_free(targetP);
+            LOG_ARG("2) connP(%p) freed", targetP);
         }
     }
 }
@@ -239,9 +243,7 @@ static void update_bootstrap_info(lwm2m_client_state_t * previousBootstrapState,
         switch(context->state)
         {
             case STATE_BOOTSTRAPPING:
-#ifdef WITH_LOGS
-                fprintf(stderr, "[BOOTSTRAP] backup security and server objects\r\n");
-#endif
+                LOG("[BOOTSTRAP] backup security and server objects");
                 if (*objArray != NULL)
                 {
                     backup_object(objArray[0]); // LWM2M_SECURITY_OBJECT_ID
@@ -605,18 +607,14 @@ int main(int argc, char *argv[])
             }
             fflush(stdout);
         }
-#ifdef WITH_LOGS
-        fprintf(stderr, "lwm2m_step() result => 0x%X\r\n", result);
-#endif
+        LOG_ARG("lwm2m_step() result => 0x%X", result);
 #ifdef LWM2M_BOOTSTRAP
         if (result != 0)
         {
             fprintf(stderr, "lwm2m_step() failed: 0x%X\r\n", result);
             if(previousState == STATE_BOOTSTRAPPING)
             {
-#ifdef WITH_LOGS
-                fprintf(stderr, "[BOOTSTRAP] restore security and server objects\r\n");
-#endif
+                LOG("[BOOTSTRAP] restore security and server objects");
                 restore_object(objArray[0]); // LWM2M_SECURITY_OBJECT_ID
                 restore_object(objArray[1]); // LWM2M_SERVER_OBJECT_ID
                 lwm2mH->state = STATE_INITIAL;
@@ -709,7 +707,7 @@ int main(int argc, char *argv[])
                         int result = connection_handle_packet(connP, buffer, numBytes);
                         if (0 != result)
                         {
-                             printf("error handling message %d\n",result);
+                             fprintf(stderr, "error handling message %d\n",result);
                         }
 #else
                         lwm2m_handle_packet(lwm2mH, buffer, numBytes, connP);

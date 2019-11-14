@@ -146,10 +146,10 @@ static int send_data(dtls_connection_t *connP,
     client_data_t * clientData;
     clientData = (client_data_t *) connP->lwm2mH->userData;
 
-    if (clientData->showMessageDump) {
-        char s[INET6_ADDRSTRLEN];
-        in_port_t port;
+    in_port_t port;
+    char s[INET6_ADDRSTRLEN];
 
+    if (clientData->showMessageDump) {
         s[0] = 0;
 
         if (AF_INET == connP->addr.sin6_family)
@@ -164,7 +164,9 @@ static int send_data(dtls_connection_t *connP,
             inet_ntop(saddr->sin6_family, &saddr->sin6_addr, s, INET6_ADDRSTRLEN);
             port = saddr->sin6_port;
         }
-        fprintf(stderr, "Sending %d bytes to [%s]:%hu\r\n", length, s, ntohs(port));
+    }
+    fprintf(stderr, "Sending %d bytes to [%s]:%hu\r\n", length, s, ntohs(port));
+    if (clientData->showMessageDump) {
         output_buffer(stderr, buffer, length, 0);
     }
 

@@ -76,6 +76,11 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 2.2.0
+
+- Fix an issue where connecting to the same server always failed after re-bootstrapping
+- Improve debug logs
+
 ### 2.1.0
 
 - Add a new command to send heartbeat

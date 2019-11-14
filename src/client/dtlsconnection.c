@@ -194,7 +194,7 @@ static int get_psk_info(struct dtls_context_t *ctx,
     dtls_connection_t* cnx = connection_find((dtls_connection_t *) ctx->app, &(session->addr.st),session->size);
     if (cnx == NULL)
     {
-        printf("GET PSK session not found\n");
+        fprintf(stderr, "GET PSK session not found\n");
         return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
     }
 
@@ -206,7 +206,7 @@ static int get_psk_info(struct dtls_context_t *ctx,
             id = security_get_public_id(cnx->securityObj, cnx->securityInstId, &idLen);
             if (result_length < idLen)
             {
-                printf("cannot set psk_identity -- buffer too small\n");
+                fprintf(stderr, "cannot set psk_identity -- buffer too small\n");
                 return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
             }
 
@@ -222,7 +222,7 @@ static int get_psk_info(struct dtls_context_t *ctx,
 
             if (result_length < keyLen)
             {
-                printf("cannot set psk -- buffer too small\n");
+                fprintf(stderr, "cannot set psk -- buffer too small\n");
                 return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
             }
 
@@ -236,7 +236,7 @@ static int get_psk_info(struct dtls_context_t *ctx,
             return 0;
         }
         default:
-            printf("unsupported request type: %d\n", type);
+            fprintf(stderr, "unsupported request type: %d\n", type);
     }
 
     return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
@@ -315,7 +315,7 @@ int get_port(struct sockaddr *x)
    } else if (x->sa_family == AF_INET6) {
        return ((struct sockaddr_in6 *)x)->sin6_port;
    } else {
-       printf("non IPV4 or IPV6 address\n");
+       fprintf(stderr, "non IPV4 or IPV6 address\n");
        return  -1;
    }
 }
@@ -352,7 +352,7 @@ int sockaddr_cmp(struct sockaddr *x, struct sockaddr *y)
         return memcmp(((struct sockaddr_in6 *)x)->sin6_addr.s6_addr, ((struct sockaddr_in6 *)y)->sin6_addr.s6_addr, 16) == 0;
     } else {
         // unknown address type
-        printf("non IPV4 or IPV6 address\n");
+        fprintf(stderr, "non IPV4 or IPV6 address\n");
         return 0;
     }
 }
@@ -587,7 +587,7 @@ int connection_send(dtls_connection_t *connP, uint8_t * buffer, size_t length){
             // we need to rehandhake because our source IP/port probably changed for the server
             if ( connection_rehandshake(connP, false) != 0 )
             {
-                printf("can't send due to rehandshake error\n");
+                fprintf(stderr, "can't send due to rehandshake error\n");
                 return -1;
             }
         }
@@ -606,7 +606,7 @@ int connection_handle_packet(dtls_connection_t *connP, uint8_t * buffer, size_t 
         // Let liblwm2m respond to the query depending on the context
         int result = dtls_handle_message(connP->dtlsContext, connP->dtlsSession, buffer, numBytes);
         if (result !=0) {
-             printf("error dtls handling message %d\n",result);
+             fprintf(stderr, "error dtls handling message %d\n",result);
         }
         return result;
     } else {
@@ -637,7 +637,7 @@ int connection_rehandshake(dtls_connection_t *connP, bool sendCloseNotify) {
     // start a fresh handshake
     int result = dtls_connect(connP->dtlsContext, connP->dtlsSession);
     if (result !=0) {
-         printf("error dtls reconnection %d\n",result);
+         fprintf(stderr, "error dtls reconnection %d\n",result);
     }
     return result;
 }

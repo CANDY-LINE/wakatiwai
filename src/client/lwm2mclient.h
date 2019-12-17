@@ -68,6 +68,7 @@ typedef struct
 #endif
     int addressFamily;
     uint8_t showMessageDump;
+    uint16_t maxPacketSize;
 } client_data_t;
 
 /*

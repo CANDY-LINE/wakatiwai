@@ -90,7 +90,7 @@
 #include <signal.h>
 #include <inttypes.h>
 
-#define MAX_PACKET_SIZE 1024
+#define DEFAULT_MAX_PACKET_SIZE 1024
 #ifndef WAKATIWAI_VERSION
 #define WAKATIWAI_VERSION "development"
 #endif /* WAKATIWAI_VERSION */
@@ -268,6 +268,7 @@ void print_usage(void)
     fprintf(stderr, "  -4\t\tUse IPv4 connection. Default: IPv6 connection\r\n");
     fprintf(stderr, "  -o OBJIDCSV\tSet the Object ID CSV. Default: 0,1,2,3\r\n");
     fprintf(stderr, "  -d\t\tShow packet dump\r\n");
+    fprintf(stderr, "  -s\t\tMaximum receivable packet size in bytes (1024 by default, must be between 1024 and 65535)\r\n");
     fprintf(stderr, "\r\n");
 }
 
@@ -374,6 +375,7 @@ int main(int argc, char *argv[])
 
     memset(&data, 0, sizeof(client_data_t));
     data.addressFamily = AF_INET6;
+    data.maxPacketSize = DEFAULT_MAX_PACKET_SIZE;
 
     opt = 1;
     while (opt < argc)
@@ -422,6 +424,20 @@ int main(int argc, char *argv[])
             objectIdArray = parse_object_id_csv(objectIdCsv, &objCount);
             if (NULL == objectIdArray)
             {
+                print_usage();
+                return 0;
+            }
+            break;
+        case 's':
+            opt++;
+            if (opt >= argc)
+            {
+                print_usage();
+                return 0;
+            }
+            data.maxPacketSize = strtol(argv[opt], NULL, 10);
+            if (data.maxPacketSize < 1024) {
+                fprintf(stderr, "Too small max packet size: %s\r\n", argv[opt]);
                 print_usage();
                 return 0;
             }
@@ -529,8 +545,9 @@ int main(int argc, char *argv[])
 
     signal(SIGINT, handle_sigint);
 
-    fprintf(stderr, "LWM2M Client \"%s\" started on port %s\r\n", name, localPort);
-    fprintf(stderr, "> "); fflush(stderr);
+    fprintf(stderr, "LWM2M Client \"%s\" started on port %s with max rcv packet size %d\r\n", name, localPort, data.maxPacketSize);
+    fflush(stderr);
+
     /*
      * We now enter in a while loop that will handle the communications from the server
      */
@@ -644,7 +661,7 @@ int main(int argc, char *argv[])
         }
         else if (result > 0)
         {
-            uint8_t buffer[MAX_PACKET_SIZE];
+            uint8_t buffer[data.maxPacketSize];
             int numBytes;
 
             /*
@@ -660,7 +677,7 @@ int main(int argc, char *argv[])
                 /*
                  * We retrieve the data received
                  */
-                numBytes = recvfrom(data.sock, buffer, MAX_PACKET_SIZE, 0, (struct sockaddr *)&addr, &addrLen);
+                numBytes = recvfrom(data.sock, buffer, data.maxPacketSize, 0, (struct sockaddr *)&addr, &addrLen);
 
                 if (0 > numBytes)
                 {

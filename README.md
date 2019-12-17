@@ -76,6 +76,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 2.3.0
+
+- Add a new option to configure the maximum receivable packet (1024 to 65535, 1024  by default)
+
 ### 2.2.0
 
 - Fix an issue where connecting to the same server always failed after re-bootstrapping

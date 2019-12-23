@@ -471,31 +471,31 @@ static size_t lwm2m_write_payload(uint16_t * i,
         switch (dataArray[j].type) {
             case LWM2M_TYPE_STRING:
             case LWM2M_TYPE_OPAQUE:
-                len += dataArray[j].value.asBuffer.length;
+                len = dataArray[j].value.asBuffer.length;
                 memcpy(
                     &payloadRaw[*i],
                     dataArray[j].value.asBuffer.buffer,
                     dataArray[j].value.asBuffer.length);
                 break;
             case LWM2M_TYPE_INTEGER:
-                len += sprintf((char *)&payloadRaw[*i], "%" PRIu64, dataArray[j].value.asInteger);
+                len = sprintf((char *)&payloadRaw[*i], "%" PRIu64, dataArray[j].value.asInteger);
                 break;
             case LWM2M_TYPE_FLOAT:
-                len += sprintf((char *)&payloadRaw[*i], "%f", dataArray[j].value.asFloat);
+                len = sprintf((char *)&payloadRaw[*i], "%f", dataArray[j].value.asFloat);
                 break;
             case LWM2M_TYPE_BOOLEAN:
-                len += 1;
+                len = 1;
                 payloadRaw[*i] = dataArray[j].value.asBoolean;
                 break;
             case LWM2M_TYPE_OBJECT_LINK:
-                len += sizeof(uint16_t) * 2;
+                len = sizeof(uint16_t) * 2;
                 payloadRaw[*i + 0] = dataArray[j].value.asObjLink.objectId & 0xff; // objectId LSB
                 payloadRaw[*i + 1] = dataArray[j].value.asObjLink.objectId >> 8;   // objectId MSB
                 payloadRaw[*i + 2] = dataArray[j].value.asObjLink.objectInstanceId & 0xff; // objectInstanceId LSB
                 payloadRaw[*i + 3] = dataArray[j].value.asObjLink.objectInstanceId >> 8;   // objectInstanceId MSB
                 break;
             case LWM2M_TYPE_MULTIPLE_RESOURCE:
-                len += lwm2m_write_payload(
+                len = lwm2m_write_payload(
                     i,
                     &payloadRaw[*i],
                     dataArray[j].value.asChildren.count,

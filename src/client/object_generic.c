@@ -47,11 +47,11 @@ typedef struct generic_obj_instance
 } generic_obj_instance_t;
 
 
-static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp)
+static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp, uint16_t * len)
 {
     uint16_t i = 0;
     uint16_t size = 6 /* "/resp:" */ + strlen(cmd) + 1 /* ":" */;
-    // /resp:{command}:{base64 payload}\r\n
+    // /resp:{command}:{base64 length}:{base64 payload}\r\n
     uint8_t * expected = lwm2m_malloc(size);
     uint8_t * ptr = expected;
     strcpy((char *)ptr, "/resp:");
@@ -69,11 +69,33 @@ static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp)
     if (i != size) {
         return NULL;
     }
+
+    uint8_t * buff = lwm2m_malloc(11);
+    ptr = buff;
+    size += 10;
+    while ((i < size) && (*resp != ':')) {
+        *ptr = *resp;
+        ++ptr;
+        ++resp;
+        ++i;
+    }
+    if (*resp != ':') {
+        lwm2m_free(buff);
+        return NULL;
+    }
+    if (len != NULL) {
+        *ptr = '\0';
+        *len = strtoll(buff, NULL, 10);
+    }
+    lwm2m_free(buff);
+    ++resp; // Skip the last ':'
+
     return resp;
 }
 
 static uint8_t handle_response(parent_context_t * context, char * cmd)
 {
+    size_t expectedPayloadLen;
     size_t payloadLen;
     uint8_t * payload;
     uint8_t buffer[MAX_MESSAGE_SIZE];
@@ -85,9 +107,9 @@ static uint8_t handle_response(parent_context_t * context, char * cmd)
         return COAP_500_INTERNAL_SERVER_ERROR;
     }
     buffer[recvLen] = '\0';
-    payload = find_base64_from_response(cmd, buffer);
+    payload = find_base64_from_response(cmd, buffer, &expectedPayloadLen);
     if (NULL == payload) {
-        fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], resp=>[%s]\r\n", cmd, buffer);
+        fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], resp=>[%s] (expectedPayloadLen:%zu\r\n", cmd, buffer, expectedPayloadLen);
         return COAP_500_INTERNAL_SERVER_ERROR;
     }
     payloadLen = strlen((const char *)payload);
@@ -131,7 +153,7 @@ static uint8_t request_command(parent_context_t * context,
     }
 
     // send command
-    fprintf(stdout, "/%s:%s\r\n", cmd, payload);
+    fprintf(stdout, "/%s:%zu:%s\r\n", cmd, payloadLen, payload);
     fflush(stdout);
 
     // release
@@ -455,6 +477,7 @@ static size_t lwm2m_write_payload(uint16_t * i,
                                   int numData,
                                   lwm2m_data_t * dataArray)
 {
+    size_t written_len = 0;
     size_t len;
     uint16_t j;
 
@@ -467,35 +490,36 @@ static size_t lwm2m_write_payload(uint16_t * i,
         payloadRaw[(*i)++] = dataArray[j].type; // Resouce Data Type
         payloadRaw[(*i)++] = 0x00;       // Length of resource data LSB (Update later)
         payloadRaw[(*i)++] = 0x00;       // Length of resource data MSB (Update later)
+        written_len += 5;
         len = 0;
         switch (dataArray[j].type) {
             case LWM2M_TYPE_STRING:
             case LWM2M_TYPE_OPAQUE:
-                len += dataArray[j].value.asBuffer.length;
+                len = dataArray[j].value.asBuffer.length;
                 memcpy(
                     &payloadRaw[*i],
                     dataArray[j].value.asBuffer.buffer,
                     dataArray[j].value.asBuffer.length);
                 break;
             case LWM2M_TYPE_INTEGER:
-                len += sprintf((char *)&payloadRaw[*i], "%" PRIu64, dataArray[j].value.asInteger);
+                len = sprintf((char *)&payloadRaw[*i], "%" PRIu64, dataArray[j].value.asInteger);
                 break;
             case LWM2M_TYPE_FLOAT:
-                len += sprintf((char *)&payloadRaw[*i], "%f", dataArray[j].value.asFloat);
+                len = sprintf((char *)&payloadRaw[*i], "%f", dataArray[j].value.asFloat);
                 break;
             case LWM2M_TYPE_BOOLEAN:
-                len += 1;
+                len = 1;
                 payloadRaw[*i] = dataArray[j].value.asBoolean;
                 break;
             case LWM2M_TYPE_OBJECT_LINK:
-                len += sizeof(uint16_t) * 2;
+                len = sizeof(uint16_t) * 2;
                 payloadRaw[*i + 0] = dataArray[j].value.asObjLink.objectId & 0xff; // objectId LSB
                 payloadRaw[*i + 1] = dataArray[j].value.asObjLink.objectId >> 8;   // objectId MSB
                 payloadRaw[*i + 2] = dataArray[j].value.asObjLink.objectInstanceId & 0xff; // objectInstanceId LSB
                 payloadRaw[*i + 3] = dataArray[j].value.asObjLink.objectInstanceId >> 8;   // objectInstanceId MSB
                 break;
             case LWM2M_TYPE_MULTIPLE_RESOURCE:
-                len += lwm2m_write_payload(
+                len = lwm2m_write_payload(
                     i,
                     &payloadRaw[*i],
                     dataArray[j].value.asChildren.count,
@@ -505,10 +529,11 @@ static size_t lwm2m_write_payload(uint16_t * i,
                 break;
         }
         *i += len;
+        written_len += len;
         payloadRaw[begin + 3] = len & 0xff; // Length of resource data LSB
         payloadRaw[begin + 4] = len >> 8;   // Length of resource data MSB
     }
-    return len;
+    return written_len;
 }
 
 static uint8_t prv_generic_write(uint16_t instanceId,

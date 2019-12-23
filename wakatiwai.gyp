@@ -1,6 +1,7 @@
 {
   'variables': {
     'version': '2.3.0',
+    'max_block1_size': '1048576',  # Up to size_t max
     'module_path%': 'build',
     'deps_dir': './deps',
     'src_dir': './src',
@@ -9,7 +10,8 @@
     'executable': 'wakatiwaiclient',
     'wakatiwai_defines': [
       'WAKATIWAI_VERSION="<(version)"',
-      'WAKATIWAI_EXECUTABLE="<(executable)"'
+      'WAKATIWAI_EXECUTABLE="<(executable)"',
+      'MAX_BLOCK1_SIZE=<(max_block1_size)',
     ],
   },
   'includes': [
@@ -42,6 +44,7 @@
         '<(client_dir)/object_generic.c',
         '<(client_dir)/dtlsconnection.c',  # DTLS Connection
         '<(client_dir)/registration.c',
+        '<(client_dir)/block1.c',
       ],
       'cflags_cc': [
         '-Wno-unused-value',

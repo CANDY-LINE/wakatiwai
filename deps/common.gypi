@@ -22,7 +22,6 @@
     'wakaama_core_sources': [
       '<(wakaama_core_dir)/er-coap-13/er-coap-13.c',
 
-      '<(wakaama_core_dir)/block1.c',
       '<(wakaama_core_dir)/bootstrap.c',
       '<(wakaama_core_dir)/data.c',
       '<(wakaama_core_dir)/discover.c',

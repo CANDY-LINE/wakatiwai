@@ -455,6 +455,7 @@ static size_t lwm2m_write_payload(uint16_t * i,
                                   int numData,
                                   lwm2m_data_t * dataArray)
 {
+    size_t written_len = 0;
     size_t len;
     uint16_t j;
 
@@ -467,6 +468,7 @@ static size_t lwm2m_write_payload(uint16_t * i,
         payloadRaw[(*i)++] = dataArray[j].type; // Resouce Data Type
         payloadRaw[(*i)++] = 0x00;       // Length of resource data LSB (Update later)
         payloadRaw[(*i)++] = 0x00;       // Length of resource data MSB (Update later)
+        written_len += 5;
         len = 0;
         switch (dataArray[j].type) {
             case LWM2M_TYPE_STRING:
@@ -505,10 +507,11 @@ static size_t lwm2m_write_payload(uint16_t * i,
                 break;
         }
         *i += len;
+        written_len += len;
         payloadRaw[begin + 3] = len & 0xff; // Length of resource data LSB
         payloadRaw[begin + 4] = len >> 8;   // Length of resource data MSB
     }
-    return len;
+    return written_len;
 }
 
 static uint8_t prv_generic_write(uint16_t instanceId,

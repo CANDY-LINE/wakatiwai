@@ -47,11 +47,11 @@ typedef struct generic_obj_instance
 } generic_obj_instance_t;
 
 
-static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp)
+static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp, uint16_t * len)
 {
     uint16_t i = 0;
     uint16_t size = 6 /* "/resp:" */ + strlen(cmd) + 1 /* ":" */;
-    // /resp:{command}:{base64 payload}\r\n
+    // /resp:{command}:{base64 length}:{base64 payload}\r\n
     uint8_t * expected = lwm2m_malloc(size);
     uint8_t * ptr = expected;
     strcpy((char *)ptr, "/resp:");
@@ -69,11 +69,33 @@ static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp)
     if (i != size) {
         return NULL;
     }
+
+    uint8_t * buff = lwm2m_malloc(11);
+    ptr = buff;
+    size += 10;
+    while ((i < size) && (*resp != ':')) {
+        *ptr = *resp;
+        ++ptr;
+        ++resp;
+        ++i;
+    }
+    if (*resp != ':') {
+        lwm2m_free(buff);
+        return NULL;
+    }
+    if (len != NULL) {
+        *ptr = '\0';
+        *len = strtoll(buff, NULL, 10);
+    }
+    lwm2m_free(buff);
+    ++resp; // Skip the last ':'
+
     return resp;
 }
 
 static uint8_t handle_response(parent_context_t * context, char * cmd)
 {
+    size_t expectedPayloadLen;
     size_t payloadLen;
     uint8_t * payload;
     uint8_t buffer[MAX_MESSAGE_SIZE];
@@ -85,9 +107,9 @@ static uint8_t handle_response(parent_context_t * context, char * cmd)
         return COAP_500_INTERNAL_SERVER_ERROR;
     }
     buffer[recvLen] = '\0';
-    payload = find_base64_from_response(cmd, buffer);
+    payload = find_base64_from_response(cmd, buffer, &expectedPayloadLen);
     if (NULL == payload) {
-        fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], resp=>[%s]\r\n", cmd, buffer);
+        fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], resp=>[%s] (expectedPayloadLen:%zu\r\n", cmd, buffer, expectedPayloadLen);
         return COAP_500_INTERNAL_SERVER_ERROR;
     }
     payloadLen = strlen((const char *)payload);
@@ -131,7 +153,7 @@ static uint8_t request_command(parent_context_t * context,
     }
 
     // send command
-    fprintf(stdout, "/%s:%s\r\n", cmd, payload);
+    fprintf(stdout, "/%s:%zu:%s\r\n", cmd, payloadLen, payload);
     fflush(stdout);
 
     // release

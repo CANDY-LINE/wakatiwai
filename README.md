@@ -80,6 +80,8 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 - Change message format (not compatible with the older version)
 - Increase the default max Block1-trasnfer size to 1048576 bytes from 4096 (can be configured with a gyp variable defined in wakatiwai.gyp)
+- Add a new variable for defining max chunk size
+- Fix an issue where the written length was wrong
 
 ### 2.3.0
 

@@ -1,5 +1,6 @@
 {
   'variables': {
+    'rest_max_chunk_size': '16384',
     'base64_dir': '<(deps_dir)/base64',
     'tinydtls_dir': '<(deps_dir)/tinydtls',
     'wakaama_dtls_dir':
@@ -22,7 +23,6 @@
     'wakaama_core_sources': [
       '<(wakaama_core_dir)/er-coap-13/er-coap-13.c',
 
-      '<(wakaama_core_dir)/block1.c',
       '<(wakaama_core_dir)/bootstrap.c',
       '<(wakaama_core_dir)/data.c',
       '<(wakaama_core_dir)/discover.c',
@@ -64,6 +64,7 @@
     ],
     'wakaama_defines': [
       'LWM2M_LITTLE_ENDIAN=<!(python <(deps_dir)/endianess.py)',
+      'REST_MAX_CHUNK_SIZE=<(rest_max_chunk_size)',
     ],
     'wakaama_client_defines': [
       '<@(wakaama_defines)',

@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
 
         if (previousState == lwm2mH->state) {
             if (STATE_BS_PENDING != lwm2mH->state) {
-                fprintf(stdout, "/heartbeat:\r\n");
+                fprintf(stdout, "/heartbeat:0:\r\n");
                 fflush(stdout);
             }
         } else {
@@ -602,22 +602,22 @@ int main(int argc, char *argv[])
             switch (lwm2mH->state)
             {
             case STATE_INITIAL:
-                fprintf(stdout, "/stateChanged:U1RBVEVfSU5JVElBTA==\r\n");
+                fprintf(stdout, "/stateChanged:20:U1RBVEVfSU5JVElBTA==\r\n");
                 break;
             case STATE_BOOTSTRAP_REQUIRED:
-                fprintf(stdout, "/stateChanged:U1RBVEVfQk9PVFNUUkFQX1JFUVVJUkVE\r\n");
+                fprintf(stdout, "/stateChanged:32:U1RBVEVfQk9PVFNUUkFQX1JFUVVJUkVE\r\n");
                 break;
             case STATE_BOOTSTRAPPING:
-                fprintf(stdout, "/stateChanged:U1RBVEVfQk9PVFNUUkFQUElORw==\r\n");
+                fprintf(stdout, "/stateChanged:28:U1RBVEVfQk9PVFNUUkFQUElORw==\r\n");
                 break;
             case STATE_REGISTER_REQUIRED:
-                fprintf(stdout, "/stateChanged:U1RBVEVfUkVHSVNURVJfUkVRVUlSRUQ=\r\n");
+                fprintf(stdout, "/stateChanged:31:U1RBVEVfUkVHSVNURVJfUkVRVUlSRUQ=\r\n");
                 break;
             case STATE_REGISTERING:
-                fprintf(stdout, "/stateChanged:U1RBVEVfUkVHSVNURVJJTkc=\r\n");
+                fprintf(stdout, "/stateChanged:24:U1RBVEVfUkVHSVNURVJJTkc=\r\n");
                 break;
             case STATE_READY:
-                fprintf(stdout, "/stateChanged:U1RBVEVfUkVBRFk=\r\n");
+                fprintf(stdout, "/stateChanged:16:U1RBVEVfUkVBRFk=\r\n");
                 break;
             default:
                 break;
@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
 
         if ((lwm2mH->state == STATE_READY) && (lwm2mH->observedList != NULL)) {
             // Issue an Observe command to poll an external process via stdout
-            fprintf(stdout, "/observe:\r\n");
+            fprintf(stdout, "/observe:0:\r\n");
             fflush(stdout);
         }
         /*

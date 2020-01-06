@@ -592,11 +592,9 @@ int main(int argc, char *argv[])
         fprintf(stderr, "** ** ** ** ** ** ** ** ** ** ** ** **\r\n");
 #endif
 
-        if (previousState == lwm2mH->state) {
-            if (STATE_BS_PENDING != lwm2mH->state) {
-                fprintf(stdout, "/heartbeat:0:\r\n");
-                fflush(stdout);
-            }
+        if (previousState == lwm2mH->state && previousState != STATE_BOOTSTRAPPING && previousState != STATE_REGISTERING) {
+            fprintf(stdout, "/heartbeat:0:\r\n");
+            fflush(stdout);
         } else {
             // Issue a command to notify state change
             switch (lwm2mH->state)

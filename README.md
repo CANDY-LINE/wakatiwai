@@ -76,6 +76,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 3.1.0
+
+- Disable heartbeat process while performing bootstrapping and registration
+
 ### 3.0.0
 
 - Change message format (not compatible with the older version)

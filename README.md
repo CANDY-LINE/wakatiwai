@@ -76,6 +76,11 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 3.2.0
+
+- Fix an issue where the base64 length didn't set properly
+- Fix an issue where handle_response failed to concatenate a series of response text
+
 ### 3.1.0
 
 - Disable heartbeat process while performing bootstrapping and registration

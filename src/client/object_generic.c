@@ -86,22 +86,39 @@ static uint8_t handle_response(parent_context_t * context, char * cmd)
     uint8_t * payload;
     uint8_t buffer[MAX_MESSAGE_SIZE];
     size_t recvLen;
-    // read recv data
-    recvLen = read(STDIN_FILENO, buffer, MAX_MESSAGE_SIZE - 1);
-    if (recvLen < 1) {
-        fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], empty response\r\n", cmd);
-        return COAP_500_INTERNAL_SERVER_ERROR;
-    }
-    buffer[recvLen] = '\0';
-    payload = find_base64_from_response(cmd, buffer, &expectedPayloadLen);
-    if (NULL == payload) {
-        fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], resp=>[%s] (expectedPayloadLen:%zu\r\n", cmd, buffer, expectedPayloadLen);
-        return COAP_500_INTERNAL_SERVER_ERROR;
-    }
+    size_t recvExpectedTotalLen;
+    size_t recvTotalLen;
+    uint8_t * bufferPtr;
+
+    memset(buffer, 0, MAX_MESSAGE_SIZE);
+    payload = NULL;
+    recvExpectedTotalLen = 0;
+    recvTotalLen = 0;
+    bufferPtr = buffer;
+
+    do {
+        // read recv data
+        recvLen = read(STDIN_FILENO, bufferPtr, MAX_MESSAGE_SIZE - 1);
+        if (recvLen < 1) {
+            fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], empty response\r\n", cmd);
+            return COAP_500_INTERNAL_SERVER_ERROR;
+        }
+        recvTotalLen += recvLen;
+        if (payload == NULL) {
+            payload = find_base64_from_response(cmd, bufferPtr, &expectedPayloadLen);
+            if (NULL == payload) {
+                fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], resp=>[%s] (expectedPayloadLen:%zu)\r\n", cmd, buffer, expectedPayloadLen);
+                return COAP_500_INTERNAL_SERVER_ERROR;
+            }
+            recvExpectedTotalLen = (payload - buffer) + expectedPayloadLen;
+        }
+        bufferPtr += recvLen;
+    } while (recvTotalLen < recvExpectedTotalLen && recvTotalLen < MAX_MESSAGE_SIZE - 1);
+    
     payloadLen = strlen((const char *)payload);
 
     // decoded result
-    fprintf(stderr, "done:cmd=>[%s], resp=>[%s], base64=>[%s], base64Len=>[%zu]\r\n", cmd, buffer, payload, payloadLen);
+    fprintf(stderr, "done:cmd=>[%s], resp=>[%s], base64=>[%s], base64Len=>[%zu], expectedPayloadLen=>[%zu]\r\n", cmd, buffer, payload, payloadLen, expectedPayloadLen);
     context->response = util_base64_decode(payload, payloadLen, &context->responseLen);
     if (context->responseLen == 0) {
         fprintf(stderr, "error:COAP_500_INTERNAL_SERVER_ERROR=>[%s], resp=>[%s]\r\n", cmd, buffer);

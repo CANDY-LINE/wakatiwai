@@ -47,50 +47,36 @@ typedef struct generic_obj_instance
 } generic_obj_instance_t;
 
 
-static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp, uint16_t * len)
+static uint8_t * find_base64_from_response(char * cmd, uint8_t * resp, uint16_t ** len)
 {
-    uint16_t i = 0;
-    uint16_t size = 6 /* "/resp:" */ + strlen(cmd) + 1 /* ":" */;
     // /resp:{command}:{base64 length}:{base64 payload}\r\n
-    uint8_t * expected = lwm2m_malloc(size);
-    uint8_t * ptr = expected;
-    strcpy((char *)ptr, "/resp:");
-    ptr += 6; //=> strlen("/resp:")
-    strcpy((char *)ptr, cmd);
-    ptr += strlen(cmd);
-    *ptr = ':';
-    ptr = expected;
-    while ((i < size) && (*ptr == *resp)) {
-        ++ptr;
-        ++resp;
-        ++i;
-    }
-    lwm2m_free(expected);
-    if (i != size) {
+    uint8_t * pc;
+    // '/resp'
+    pc = strtok(resp, ":");
+    if (pc == NULL) {
+        fprintf(stderr, "error: Not a valid response(cmd:[%s])\r\n", cmd);
         return NULL;
     }
-
-    uint8_t * buff = lwm2m_malloc(11);
-    ptr = buff;
-    size += 10;
-    while ((i < size) && (*resp != ':')) {
-        *ptr = *resp;
-        ++ptr;
-        ++resp;
-        ++i;
-    }
-    if (*resp != ':') {
-        lwm2m_free(buff);
+    // '{command}'
+    pc = strtok(NULL, ":");
+    if (pc == NULL) {
+        fprintf(stderr, "error: Not a valid response(cmd:[%s])\r\n", cmd);
         return NULL;
     }
-    if (len != NULL) {
-        *ptr = '\0';
-        *len = strtoll(buff, NULL, 10);
+    if (strcmp(pc, cmd) != 0) {
+        fprintf(stderr, "error: Not an expected cmd response(expected cmd:[%s], actual cmd:[%s])\r\n", cmd, pc);
+        return NULL;
     }
-    lwm2m_free(buff);
-    ++resp; // Skip the last ':'
-
-    return resp;
+    // '{base64 length}'
+    pc = strtok(NULL, ":");
+    *len = atoi((const char *)pc);
+    // {base64 payload}
+    pc = strtok(NULL, ":");
+    if (pc == NULL) {
+        fprintf(stderr, "error: Not a valid response(cmd:[%s])\r\n", cmd);
+        return NULL;
+    }
+    return pc;
 }
 
 static uint8_t handle_response(parent_context_t * context, char * cmd)

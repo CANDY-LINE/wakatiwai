@@ -96,13 +96,18 @@
 #endif /* WAKATIWAI_VERSION */
 
 int g_reboot = 0;
-static int g_quit = 0;
+int g_quit = 0;
 
 lwm2m_object_t ** objArray = NULL;
 
 void handle_sigint(int signum)
 {
     g_quit = 1; // graceful shutdown
+}
+
+void handle_sigterm(int signum)
+{
+    g_quit = 2; // graceful shutdown without deregistration
 }
 
 #ifdef WITH_TINYDTLS
@@ -544,6 +549,7 @@ int main(int argc, char *argv[])
     }
 
     signal(SIGINT, handle_sigint);
+    signal(SIGTERM, handle_sigterm);
 
     fprintf(stderr, "LWM2M Client \"%s\" started on port %s with max rcv packet size %d\r\n", name, localPort, data.maxPacketSize);
     fflush(stderr);

@@ -78,6 +78,8 @@
 
 #ifdef LWM2M_CLIENT_MODE
 
+extern g_quit; // from lwm2mclient.c
+
 static int prv_getRegistrationQueryLength(lwm2m_context_t * contextP,
                                           lwm2m_server_t * server)
 {
@@ -681,7 +683,12 @@ void registration_deregister(lwm2m_context_t * contextP,
 {
     lwm2m_transaction_t * transaction;
 
-    LOG_ARG("State: %s, serverP->status: %s", STR_STATE(contextP->state), STR_STATUS(serverP->status));
+    LOG_ARG("State: %s, serverP->status: %s, g_quit: %d", STR_STATE(contextP->state), STR_STATUS(serverP->status), g_quit);
+    if (g_quit == 2) {
+        // graceful shutdown without deregistration
+        LOG("Deregistration has been skipped.");
+        return;
+    }
 
     if (serverP->status == STATE_DEREGISTERED
      || serverP->status == STATE_REG_PENDING

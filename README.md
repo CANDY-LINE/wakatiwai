@@ -76,6 +76,12 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 3.3.0
+
+- Add a new signal trapping for not sending a deregistration message on process exit
+  - SIGTERM => NOT sending a deregistration message
+  - SIGINT  => sending a dregistration message
+
 ### 3.2.0
 
 - Fix an issue where the base64 length didn't set properly

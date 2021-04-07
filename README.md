@@ -76,6 +76,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 3.3.1
+
+- Fix an issue where duplicate object IDs were never eliminated
+
 ### 3.3.0
 
 - Add a new signal trapping for not sending a deregistration message on process exit

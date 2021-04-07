@@ -298,6 +298,21 @@ static char * server_get_uri(lwm2m_object_t * obj, uint16_t instanceId) {
 
 }
 
+static uint16_t object_id_contains(uint16_t objectId, uint16_t * objectIdArray, uint16_t len) {
+    uint16_t result = 0;
+    uint16_t i = 0;
+    if (objectId < 1 || objectIdArray == NULL || len < 1) {
+        return result;
+    }
+    for (; i < len; i++) {
+        if (objectIdArray[i] == objectId) {
+            result = 1;
+            break;
+        }
+    }
+    return result;
+}
+
 static uint16_t * parse_object_id_csv(const char * objectIdCsv, uint16_t * objCount) {
     uint16_t count = 1;
     uint16_t buffIdx = 0;
@@ -323,7 +338,10 @@ static uint16_t * parse_object_id_csv(const char * objectIdCsv, uint16_t * objCo
             }
             buff[buffIdx] = '\0';
             objectId = strtol(buff, NULL, 10);
-            if (objectId > 3) {
+            if (object_id_contains(objectId, objectIdArray, objectIndex)) {
+                // duplicate object ID, ignored.
+                continue;
+            } else  if (objectId > 3) {
                 objectIdArray[objectIndex++] = objectId;
             } else {
                 fprintf(stderr, "Invalid Object ID\r\n");

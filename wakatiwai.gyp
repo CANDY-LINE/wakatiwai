@@ -1,6 +1,6 @@
 {
   'variables': {
-    'version': '3.3.1',
+    'version': '3.3.2',
     'max_block1_size': '1048576',  # Up to size_t max (4096 by default)
     'module_path%': 'build',
     'deps_dir': './deps',

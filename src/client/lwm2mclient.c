@@ -340,7 +340,6 @@ static uint16_t * parse_object_id_csv(const char * objectIdCsv, uint16_t * objCo
             objectId = strtol(buff, NULL, 10);
             if (object_id_contains(objectId, objectIdArray, objectIndex)) {
                 // duplicate object ID, ignored.
-                continue;
             } else  if (objectId > 3) {
                 objectIdArray[objectIndex++] = objectId;
             } else {

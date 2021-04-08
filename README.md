@@ -76,6 +76,10 @@ $ ./build/bootstrapserver -4 -f ./build/bootstrap_server.ini
 
 ## Revision History
 
+### 3.3.2
+
+- Fix an issue where Too long Object ID error can be thrown
+
 ### 3.3.1
 
 - Fix an issue where duplicate object IDs were never eliminated
